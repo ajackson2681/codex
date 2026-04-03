@@ -1,0 +1,15 @@
+build/
+!.vscode/*
+*.uf2
+local/
+CMakeCache.txt
+cmake_install.cmake
+pico-sdk/
+output/
+CMakeFiles/
+pico_flash_region.ld
+*.map
+compile_commands.json
+generated/
+test/
+Makefile
