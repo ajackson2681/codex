@@ -5,6 +5,9 @@
 #include "tusb.h"
 #include <functional>
 
+#include "f_util.h"
+#include "ff.h"
+
 std::function<void(uint8_t)> kbCb = nullptr;
 
 void tuh_mount_cb(uint8_t dev_addr) {
@@ -24,32 +27,50 @@ int main()
     }
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    FATFS fs;
+    FIL fil;
 
+    // Mount
+    f_mount(&fs, "0:", 1);
+
+    // Write
+    f_open(&fil, "0:/document.txt", FA_WRITE | FA_CREATE_ALWAYS);
+    f_puts("Hello Codex\n", &fil);
+    f_close(&fil);
+
+    // Read
+    // f_open(&fil, "0:/document.txt", FA_READ);
+    // char buf[256];
+    // f_gets(buf, sizeof(buf), &fil);
+    // f_close(&fil);
+
+    // Unmount
+    f_unmount("0:");
     // 40x4 dual-chip LCD
-    LiquidCrystal lcd(
-        22,            // RS
-        LCD_PIN_NC,   // RW  -- tied to GND
-        26,            // EN1 (chip 1, rows 0-1)
-        21,            // EN2 (chip 2, rows 2-3) -- LCD_PIN_NC for single-chip
-        6,            // D4
-        27,            // D5
-        2,            // D6
-        28             // D7
-    );
+    // LiquidCrystal lcd(
+    //     22,            // RS
+    //     LCD_PIN_NC,   // RW  -- tied to GND
+    //     26,            // EN1 (chip 1, rows 0-1)
+    //     21,            // EN2 (chip 2, rows 2-3) -- LCD_PIN_NC for single-chip
+    //     6,            // D4
+    //     27,            // D5
+    //     2,            // D6
+    //     28             // D7
+    // );
     
-    lcd.begin(40, 4);
+    // lcd.begin(40, 4);
     
-    // // ---- Row 0 ----
-    lcd.setCursor(0, 0);
-    std::string f = "CODEX v1.0.0";
-    for (char c : f) {
-        lcd.write(c);
-    }
-    lcd.blink();
+    // // // ---- Row 0 ----
+    // lcd.setCursor(0, 0);
+    // std::string f = "CODEX v1.0.0";
+    // // for (char c : f) {
+    // //     lcd.write(c);
+    // // }
+    // lcd.blink();
     
-    kbCb = [&](uint8_t asciiCode) {
-        lcd.write(asciiCode);
-    };
+    // kbCb = [&](uint8_t asciiCode) {
+    //     lcd.write(asciiCode);
+    // };
     // p_lcd = &lcd;
     // lcd.write('a');
     // lcd.write('b');
@@ -89,7 +110,7 @@ int main()
     // uint32_t count = 0;
     // tusb_init();
     while (true) {
-        tuh_task();
+        // tuh_task();
         // lcd.setCursor(9, 3);
         // lcd.print(count++);
         // sleep_ms(500);

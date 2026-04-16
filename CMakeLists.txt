@@ -36,12 +36,15 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
+add_subdirectory(lib/fatfs/FatFs_SPI)
+
 add_executable(texteditor 
     src/texteditor.cpp
     src/GapBuffer.cpp
     src/LiquidCrystal.cpp
     src/hid.cpp
-    src/Keyboard.cpp)
+    src/Keyboard.cpp
+    src/hardware.c)
 
 pico_set_program_name(texteditor "texteditor")
 pico_set_program_version(texteditor "0.1")
@@ -51,7 +54,12 @@ pico_enable_stdio_uart(texteditor 0)
 pico_enable_stdio_usb(texteditor 0)
 
 # Add the standard library to the build
-target_link_libraries(texteditor pico_stdlib tinyusb_host tinyusb_board)
+target_link_libraries(texteditor 
+    pico_stdlib 
+    tinyusb_host 
+    tinyusb_board
+    FatFs_SPI
+)
 
 # Add the standard include files to the build
 target_include_directories(texteditor PRIVATE
