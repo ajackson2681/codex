@@ -36,7 +36,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_subdirectory(lib/fatfs/FatFs_SPI)
+add_subdirectory(lib/fatfs/FatFs_SPI ${CMAKE_BINARY_DIR}/fatfs)
 
 add_executable(texteditor 
     src/texteditor.cpp
