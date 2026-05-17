@@ -1,12 +1,16 @@
 #include "GapBuffer.hpp"
 #include <iostream>
 #include <string>
+#include <cstring>
+#include <cmath>
 
 GapBuffer::GapBuffer(int initialSize) 
     : buffer(initialSize, '\0')
     , gapStart(0)
     , gapEnd(initialSize) 
     , viewFrameStart(0)
+    , cursorRow(0)
+    , cursorCol(0)
     , stale(false)
 {
 
@@ -15,59 +19,183 @@ GapBuffer::GapBuffer(int initialSize)
 void GapBuffer::insert(char c)
 {
     buffer[gapStart++] = c;
-
+    
     if (gapStart == gapEnd) {
-        this->resize();
+        resize();
     }
 
-    frameShift();
+    moveCursorRight();
 
-    invalidate();
+    refreshFrameBuffer();
 }
 
 void GapBuffer::insert(const std::string& str)
 {
     for (char c : str) {
-        this->insert(c);
+        insert(c);
     }
 }
 
-void GapBuffer::moveLeft()
+int GapBuffer::findPrevLineStart(int from)
 {
+    if (from == 0) {
+        return 0;
+    }
+    
+    int pos = from - 1;
+    
+    // step past the newline that ended this line if present
+    if (getCharAt(pos) == '\n' && pos > 0) {
+        pos--;
+    }
+    
+    // scan back up to 40 chars to find the line start
+    int count = 0;
+    while (pos > 0 && count < COL_COUNT) {
+        if (getCharAt(pos - 1) == '\n') {
+            break;
+        }
+
+        pos--;
+        count++;
+    }
+    
+    return pos;
+}
+
+int GapBuffer::findNextLineStart(int from)
+{
+    int col = 0;
+    int pos = from;
+    while (pos < totalChars()) {
+        char c = getCharAt(pos++);
+
+        if (c == '\n') {
+            return pos;
+        }
+        
+        if (++col >= COL_COUNT) {
+            return pos;
+        }
+    }
+    return pos;
+}
+
+void GapBuffer::moveCursorLeft()
+{
+    cursorCol--;
+    if (cursorCol < 0) {
+        cursorCol = COL_COUNT - 1;
+        cursorRow--;
+        if (cursorRow < 0) {
+            cursorRow = 0;
+            viewFrameStart = findPrevLineStart(viewFrameStart);
+            refreshFrameBuffer();
+        }
+        else {
+            // if we moved up a line but are still within the frame, we need to
+            // move the column to the end of new current line
+            if (frameBuf[cursorRow][cursorCol] == '\0') {
+                // scan left until we find a non-empty character or the start of the line
+                while (cursorCol > 0 && frameBuf[cursorRow][cursorCol] == '\0') {
+                    cursorCol--;
+                }
+            }
+        }
+    }
+
+}
+
+void GapBuffer::moveLeft(bool moveCursor)
+{
+
     if (gapStart == 0) {
         return;
     }
 
     buffer[gapEnd - 1] = buffer[gapStart - 1];
-    gapStart--;
-    if (gapStart == viewFrameStart) {
-        viewFrameStart -= COL_COUNT;
-        if (viewFrameStart < 0) {
-            viewFrameStart = 0;
-        }
-    }
-    gapEnd--;
 
-    frameShift();
+    gapStart--;
+    gapEnd--;
+    if (moveCursor) {
+        moveCursorLeft();
+    }
 }
 
-void GapBuffer::moveRight()
+void GapBuffer::moveLeft()
 {
+    moveLeft(true);
+}
+
+void GapBuffer::moveCursorRight()
+{
+    cursorCol++;
+    if (cursorCol == COL_COUNT || buffer[gapStart - 1] == '\n') {
+        cursorCol = 0;
+        cursorRow++;
+        if (cursorRow >= ROW_COUNT) {
+            cursorRow = ROW_COUNT - 1;
+            viewFrameStart = findNextLineStart(viewFrameStart);
+            refreshFrameBuffer();
+        }
+    }
+
+}
+
+
+void GapBuffer::moveRight(bool moveCursor)
+{
+
     if (gapEnd == buffer.size()) {
         return;
     }
 
     buffer[gapStart] = buffer[gapEnd];
+
     gapStart++;
     gapEnd++;
+    if (moveCursor) {
+        moveCursorRight();
+    }
+}
 
-    frameShift();
+void GapBuffer::moveRight()
+{
+    moveRight(true);
+}
+
+void GapBuffer::refreshFrameBuffer()
+{
+    std::memset(frameBuf, '\0', sizeof(frameBuf));
+    
+    int row = 0, col = 0;
+    int totalCh = totalChars();
+    
+    for (int i = viewFrameStart; i < totalCh && row < ROW_COUNT; i++) {
+        char c = getCharAt(i);
+        
+        frameBuf[row][col] = c;
+
+        if (c == '\n') {
+            row++;
+            col = 0;
+        } 
+        else {
+            col++;
+            if (col >= COL_COUNT) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+
+    invalidate();
 }
 
 void GapBuffer::resize()
 {
-    size_t suffixLen = buffer.size() - gapEnd;
-    size_t oldSize = buffer.size();
+    int suffixLen = buffer.size() - gapEnd;
+    int oldSize = buffer.size();
     
     buffer.resize(buffer.size() * 2, '\0');
 
@@ -78,59 +206,32 @@ void GapBuffer::resize()
     gapEnd = buffer.size() - suffixLen;
 }
 
-int GapBuffer::fillVisibleFrame(char frameBuf[FRAME_SIZE])
-{
-    int filledChars = 0;
-    
-    for (size_t i = viewFrameStart; 
-         i < viewFrameStart + FRAME_SIZE && 
-         i < gapStart &&
-         filledChars < FRAME_SIZE; 
-         i++) 
-    {
-        frameBuf[filledChars++] = buffer[i];
-    }
-    
-    for (size_t i = gapEnd; 
-         (i - gapEnd) < viewFrameStart + FRAME_SIZE && 
-         i < buffer.size() &&
-         filledChars < FRAME_SIZE; 
-         i++) 
-    {
-        frameBuf[filledChars++] = buffer[i];
-    }
-
-    stale = false;
-
-    return gapStart - viewFrameStart;
-}
-
 void GapBuffer::moveWordLeft() 
 {
-    if (gapStart > 0 && buffer[gapStart - 1] == ' ') {
-        this->moveLeft();
+    if (gapStart > 0 && (buffer[gapStart - 1] == ' ' || buffer[gapStart - 1] == '\n')) {
+        moveLeft(true);
     }
 
-    while (gapStart > 0 && buffer[gapStart - 1] != ' ') {
-        this->moveLeft();
+    while (gapStart > 0 && buffer[gapStart - 1] != ' ' && buffer[gapStart - 1] != '\n') {
+        moveLeft(true);
     }
 }
 
 void GapBuffer::moveWordRight() 
 {
-    if (gapEnd < buffer.size() && buffer[gapEnd] == ' ') {
-        this->moveRight();
+    if (gapEnd < buffer.size() && (buffer[gapEnd] == ' ' || buffer[gapEnd] == '\n')) {
+        moveRight(true);
     }
 
-    while (gapEnd < buffer.size() && buffer[gapEnd] != ' ') {
-        this->moveRight();
+    while (gapEnd < buffer.size() && buffer[gapEnd] != ' ' && buffer[gapEnd] != '\n') {
+        moveRight(true);
     }
 }
 
 void GapBuffer::moveToStart() 
 {
     while (gapStart > 0) {
-        this->moveLeft();
+        moveLeft();
     }
 
     viewFrameStart = 0;
@@ -139,55 +240,226 @@ void GapBuffer::moveToStart()
 void GapBuffer::moveToEnd() 
 {
     while (gapEnd < buffer.size()) {
-        this->moveRight();
+        moveRight();
     }
+}
+
+void GapBuffer::invalidate()
+{
+    stale = true;
+}
+
+int GapBuffer::frameCellToBufferIndex(int targetRow, int targetCol)
+{
+    int row = 0, col = 0;
+    int pos = viewFrameStart;
+
+    while (pos < totalChars()) {
+        if (row == targetRow && col == targetCol) {
+            return pos;
+        } 
+        
+        char c = getCharAt(pos++);
+        if (c == '\n') {
+            row++;
+            col = 0;
+        } 
+        else {
+            col++;
+            if (col >= COL_COUNT) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+    return pos;
 }
 
 void GapBuffer::moveDownOneLine() 
 {
-    int gapStartNew = gapStart + COL_COUNT;
-
-    if (gapStartNew > buffer.size()) {
-        gapStartNew = buffer.size();
+    // check if the next row exists in the frame buffer
+    // a row exists if the current row ended with \n, or if it has content
+    bool currentRowHasNewline = false;
+    for (int c = 0; c < COL_COUNT; c++) {
+        if (frameBuf[cursorRow][c] == '\n') {
+            currentRowHasNewline = true;
+            break;
+        }
     }
+    
+    if (cursorRow >= 3) {
+        // scroll frame down
+        int nextStart = findNextLineStart(viewFrameStart);
+        
+        if (nextStart >= totalChars() || !currentRowHasNewline) {
+            return; // can't scroll down if there are no more lines
+        }            
 
-    while (gapStart < gapStartNew) {
-        this->moveRight();
+        viewFrameStart = nextStart;
+        refreshFrameBuffer();
+    } 
+    else {
+        if (!currentRowHasNewline && frameBuf[cursorRow + 1][0] == '\0' && frameBuf[cursorRow][39] == '\0') {
+            return;
+        }
+        cursorRow++;
+    }
+    
+    int targetCol = cursorCol;
+
+    // find how long the target row actually is
+    int lineLen = 0;
+    for (int c = 0; c < COL_COUNT; c++) {
+        if (frameBuf[cursorRow][c] != '\0') {
+            lineLen = c + 1;
+        }
+        else {
+            break; // early return so we don't have to scan the whole line
+        }
+    }
+    
+    cursorCol = std::min(targetCol, lineLen);
+    
+    // sync gap buffer to new cursor position
+    int newPos = frameCellToBufferIndex(cursorRow, cursorCol);
+
+    while (gapStart < newPos) {
+        moveRight(false);
     }
 }
 
 void GapBuffer::moveUpOneLine() 
 {
-    int gapStartNew = gapStart - COL_COUNT;
-    
-    if (gapStartNew < 0) {
-        gapStartNew = 0;
+    if (cursorRow == 0) {
+        // scroll frame up
+        if (viewFrameStart == 0) {
+            return; // can't scroll up if we're already at the top
+        }
+        viewFrameStart = findPrevLineStart(viewFrameStart);
+        refreshFrameBuffer();
+        // cursorRow stays the same, now pointing at new content
+    } 
+    else {
+        cursorRow--;
     }
+    
+    // clamp to end of target line
+    int targetCol = cursorCol;
+    // find how long the target row actually is
+    int lineLen = 0;
+    for (int c = 0; c < COL_COUNT - 1; c++) {
+        if (frameBuf[cursorRow][c] != '\0') {
+            lineLen = c; // -1 because we want the last valid index, which
+            // means skipping the newline character at the end of the line
+        } 
+    }
+    cursorCol = std::min(targetCol, lineLen);
 
-    while (gapStart > gapStartNew) {
-        this->moveLeft();
+    // sync gap buffer to new cursor position
+    int newPos = frameCellToBufferIndex(cursorRow, cursorCol);
+    while(gapStart > newPos) {
+        moveLeft(false);
     }
 }
 
-void GapBuffer::frameShift()
+void GapBuffer::moveToFrameStart() 
 {
-    if (gapStart == viewFrameStart + FRAME_SIZE) {
-        if (viewFrameStart + FRAME_SIZE > buffer.size()) {
-            viewFrameStart = buffer.size() - FRAME_SIZE;
-        }
-        else {
-            viewFrameStart += COL_COUNT;
-        }
+    while (gapStart > viewFrameStart) {
+        moveLeft();
     }
-    else if (gapStart == viewFrameStart) {
-        if (viewFrameStart - COL_COUNT < 0) {
-            viewFrameStart = 0;
-        }
-        else {
-            viewFrameStart -= COL_COUNT;
-        }
+    refreshFrameBuffer();
+}
+
+void GapBuffer::moveToFrameEnd()
+{
+    while (cursorCol < COL_COUNT && 
+           cursorRow < ROW_COUNT && 
+           frameBuf[cursorRow][cursorCol] != '\0') 
+    {
+        moveRight();
+    }
+    
+    refreshFrameBuffer();
+}
+
+char GapBuffer::getCharAt(int idx)
+{
+    if (idx < gapStart) {
+        return buffer[idx];
+    } 
+    else {
+        return buffer[gapEnd + idx - gapStart];
+    }
+}
+
+void GapBuffer::backSpace()
+{
+    if (gapStart == 0) {
+        return;
     }
 
+    buffer[gapStart-1] = '\0';
+    gapStart--;
+
+    moveCursorLeft();
+
+    refreshFrameBuffer();
+}
+
+void GapBuffer::backSpaceWord()
+{
+    backSpace();
+
+    while (gapStart > 0 && buffer[gapStart - 1] != ' ' ) {
+        backSpace();
+    }
+}
+
+void GapBuffer::deleteChar()
+{
+    if (gapEnd == buffer.size()) {
+        return;
+    }
+    
+    buffer[gapEnd] = '\0';
+    gapEnd++;
+
+    refreshFrameBuffer();
+}
+
+void GapBuffer::deleteWord()
+{
+    deleteChar();
+
+    while (gapEnd < buffer.size() && buffer[gapEnd] != ' ') {
+        deleteChar();
+    }
+}
+
+bool GapBuffer::isStale()
+{
+    return stale;
+}
+
+const char (&GapBuffer::getVisibleFrame())[ROW_COUNT][COL_COUNT]
+{
+    stale = false;
+    return frameBuf;
+}
+
+int GapBuffer::getFrameRow()
+{
+    return cursorRow;
+}
+
+int GapBuffer::getFrameCol()
+{
+    return cursorCol;
+}
+
+int GapBuffer::totalChars()
+{
+    return gapStart + (buffer.size() - gapEnd);
 }
 
 GapBuffer::~GapBuffer() 

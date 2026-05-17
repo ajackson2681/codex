@@ -21,98 +21,55 @@ int main()
     stdio_init_all();
     // init host stack on configured roothub port
     tuh_init(BOARD_TUH_RHPORT);
-
     if (board_init_after_tusb) {
         board_init_after_tusb();
     }
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-    FATFS fs;
-    FIL fil;
 
-    // Mount
-    f_mount(&fs, "0:", 1);
 
-    // Write
-    f_open(&fil, "0:/document.txt", FA_WRITE | FA_CREATE_ALWAYS);
-    f_puts("Hello Codex\n", &fil);
-    f_close(&fil);
-
-    // Read
-    // f_open(&fil, "0:/document.txt", FA_READ);
-    // char buf[256];
-    // f_gets(buf, sizeof(buf), &fil);
-    // f_close(&fil);
-
-    // Unmount
-    f_unmount("0:");
     // 40x4 dual-chip LCD
-    // LiquidCrystal lcd(
-    //     22,            // RS
-    //     LCD_PIN_NC,   // RW  -- tied to GND
-    //     26,            // EN1 (chip 1, rows 0-1)
-    //     21,            // EN2 (chip 2, rows 2-3) -- LCD_PIN_NC for single-chip
-    //     6,            // D4
-    //     27,            // D5
-    //     2,            // D6
-    //     28             // D7
-    // );
-    
-    // lcd.begin(40, 4);
-    
-    // // // ---- Row 0 ----
-    // lcd.setCursor(0, 0);
-    // std::string f = "CODEX v1.0.0";
-    // // for (char c : f) {
-    // //     lcd.write(c);
-    // // }
-    // lcd.blink();
-    
-    // kbCb = [&](uint8_t asciiCode) {
-    //     lcd.write(asciiCode);
-    // };
-    // p_lcd = &lcd;
-    // lcd.write('a');
-    // lcd.write('b');
-    // lcd.write('c');
-    // lcd.print("Pico SDK LiquidCrystal port");
- 
-    // // ---- Row 1 ----
-    // lcd.setCursor(0, 1);
-    // lcd.print("40x4 dual-HD44780 demo");
- 
-    // // ---- Row 2 (second chip) ----
-    // lcd(0, 2) << "Rows 2-3 via EN2";
- 
-    // // ---- Row 3 ----
-    // lcd(0, 3) << "Counter: ";
- 
-    // // ---- Custom character: smiley ----
-    // const uint8_t smiley[8] = {
-    //     0b00000,
-    //     0b01010,
-    //     0b01010,
-    //     0b00000,
-    //     0b10001,
-    //     0b01110,
-    //     0b00000,
-    //     0b00000,
-    // };
-    // lcd.createChar(0, smiley);
-    // lcd.setCursor(39, 0);
-    // lcd.write(0x00);
-    // lcd.setCursor(0,3);
-    // // lcd.print("test");
-    // lcd.blink();
+    LiquidCrystal lcd(
+        21,            // RS
+        LCD_PIN_NC,    // RW  -- tied to GND
+        22,            // EN1 (chip 1, rows 0-1)
+        20,            // EN2 (chip 2, rows 2-3) -- LCD_PIN_NC for single-chip
+        14,            // D4
+        12,            // D5
+        15,            // D6
+        13             // D7
+    );
+    lcd.begin(40, 4);
+    lcd.blink();
+
 
     gpio_put(PICO_DEFAULT_LED_PIN, true);
-    // // ---- Counter loop ----
-    // uint32_t count = 0;
-    // tusb_init();
+
     while (true) {
-        // tuh_task();
-        // lcd.setCursor(9, 3);
-        // lcd.print(count++);
-        // sleep_ms(500);
-    }
+        tuh_task();
+        if (buffer.isStale()) {
+            auto b = buffer.getVisibleFrame();
+            lcd.setCursor(0,0);
+            for (int i = 0; i < ROW_COUNT; i++) {
+                for (int j = 0; j < COL_COUNT; j++) {
+                    char c = b[i][j];
+
+                    switch (c) {
+                        case '\n':
+                        case '\r':
+                        case '\0':
+                            lcd.write(' ');
+                            break;
+                        default:
+                            lcd.write(c);
+                            break;
+                    }
+                }
+            }
+        }
+
+        int row,col;
+        buffer.getCursorPos(row,col);
+        lcd.setCursor(col,row);
+    } 
 }

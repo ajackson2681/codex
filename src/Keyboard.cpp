@@ -23,10 +23,10 @@ void Keyboard::ProcessInput(const hid_keyboard_report_t *report, uint8_t keyCode
             break;
     }
 
-    // uint8_t ch = keycode2ascii[report->keycode[i]][is_shift ? 1 : 0];
-    // if (kbCb) {
-    //   kbCb(ch);
-    // }
+    uint8_t ch = keycode2ascii[keyCode][is_shift ? 1 : 0];
+    if (kbCb) {
+      kbCb(ch);
+    }
 
     // putchar(ch);
     // if ( ch == '\r' ) putchar('\n'); // added new line for enter key

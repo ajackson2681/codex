@@ -14,13 +14,17 @@
 
 class GapBuffer {
 private:
+    char frameBuf[ROW_COUNT][COL_COUNT];
+
     std::vector<char> buffer;
-    size_t gapStart;
-    size_t gapEnd;    
-    size_t viewFrameStart;
+    int gapStart;
+    int gapEnd;    
+    int viewFrameStart;
+    int cursorRow;
+    int cursorCol;
     // this is true if the buffer has been modified since the last time it was printed
     bool stale = true;
-    // LiquidCrystal& lcd;
+    
     /**
      * @brief Resizese the buffer vector. It will double in size with each
      * call to this until the buffer reaches a size of 64k, and then it will
@@ -28,7 +32,22 @@ private:
      * the buffer will no longer grow.
      */
     void resize();
-    static std::string TEST_STR;
+
+    void moveLeft(bool moveCursor);
+    void moveRight(bool moveCursor);
+
+    void moveCursorLeft();
+    void moveCursorRight();
+
+    void refreshFrameBuffer();
+
+    int findPrevLineStart(int from);
+    int findNextLineStart(int from);
+
+    int totalChars();
+    
+    int frameCellToBufferIndex(int targetRow, int targetCol);
+
 public:
     // GapBuffer(LiquidCrystal& _lcd, int initialSize = DEFAULT_BUF_SIZE);
     GapBuffer(int initialSize = DEFAULT_BUF_SIZE);
@@ -89,18 +108,26 @@ public:
      */
     void moveDownOneLine();
 
-    void frameShift();
-    
-    /**
-     * @brief Fills the provided frame buffer with the visible portion of the gap 
-     * buffer and returns the cursor index within that frame buffer. The frame 
-     * buffer should be of size FRAME_SIZE.
-     * 
-     * @param frameBuf buffer to copy the visible portion of the gap buffer into
-     * @return int cursor index within the frame buffer
-     */
-    int fillVisibleFrame(char frameBuf[FRAME_SIZE]);
+    void moveToFrameStart();
+    void moveToFrameEnd();
 
-    inline void invalidate() { stale = true; }
-    inline bool isStale() { return stale; }
+    void backSpace();
+    void backSpaceWord();
+
+    void deleteChar();
+    void deleteWord();
+    
+    char getCharAt(int idx);
+    
+    int getFrameRow();
+    int getFrameCol();
+
+    inline void getCursorPos(int& row, int& col) {
+        row = cursorRow; 
+        col = cursorCol;
+    }
+
+    const char (&getVisibleFrame())[ROW_COUNT][COL_COUNT];
+    void invalidate();
+    bool isStale();
 };

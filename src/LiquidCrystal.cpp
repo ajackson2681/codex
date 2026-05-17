@@ -484,7 +484,3 @@ void LiquidCrystal::pinMode(int pin, PinMode mode) {
             break;
     }
 }
-
-void LiquidCrystal::delayMicroseconds(unsigned int us) {
-    sleep_us(us);
-}

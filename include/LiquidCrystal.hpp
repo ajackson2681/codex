@@ -141,7 +141,7 @@ private:
     inline void pinMode(int pin, PinMode mode);
     inline void digitalWrite(int pin, int value);
     inline int digitalRead(int pin);
-    inline void delayMicroseconds(unsigned int us);
+    inline void delayMicroseconds(unsigned int us) {sleep_us(us);}
 };
 
 #endif
