@@ -13,3 +13,6 @@ compile_commands.json
 generated/
 test/
 Makefile
+pcb/**/*-backups/
+*.lck
+*.bak
