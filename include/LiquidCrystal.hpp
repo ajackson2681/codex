@@ -103,6 +103,7 @@ public:
 	void createChar(uint8_t, uint8_t[]);
 	void setCursor(uint8_t, uint8_t);
     virtual size_t write(uint8_t);   //in Arduino 22 was:	void write(uint8_t);
+	size_t write(std::string);
 	inline void command(uint8_t value)  { send(value, LOW); }
 	void commandBoth(uint8_t);
 	inline LiquidCrystal& operator() (uint8_t x, uint8_t y) { setCursor(x,y); return *this;}  //use along w Streaming.h to support: lcd(col,line)<<"a="<<a;

@@ -45,10 +45,10 @@ int GapBuffer::findPrevLineStart(int from)
     int pos = from - 1;
     
     // step past the newline that ended this line if present
-    if (getCharAt(pos) == '\n' && pos > 0) {
+    if (getCharAt(pos) == '\n' && pos > 0 && getCharAt(from) != '\n') {
         pos--;
     }
-    
+
     // scan back up to 40 chars to find the line start
     int count = 0;
     while (pos > 0 && count < COL_COUNT) {
@@ -58,6 +58,10 @@ int GapBuffer::findPrevLineStart(int from)
 
         pos--;
         count++;
+
+        if (count == COL_COUNT) {
+            pos++;
+        }
     }
     
     return pos;
@@ -67,6 +71,7 @@ int GapBuffer::findNextLineStart(int from)
 {
     int col = 0;
     int pos = from;
+
     while (pos < totalChars()) {
         char c = getCharAt(pos++);
 
@@ -78,6 +83,7 @@ int GapBuffer::findNextLineStart(int from)
             return pos;
         }
     }
+    
     return pos;
 }
 
@@ -235,6 +241,10 @@ void GapBuffer::moveToStart()
     }
 
     viewFrameStart = 0;
+    cursorRow = 0;
+    cursorCol = 0;
+
+    refreshFrameBuffer();
 }
 
 void GapBuffer::moveToEnd() 
@@ -242,6 +252,8 @@ void GapBuffer::moveToEnd()
     while (gapEnd < buffer.size()) {
         moveRight();
     }
+
+    refreshFrameBuffer();
 }
 
 void GapBuffer::invalidate()
@@ -272,7 +284,25 @@ int GapBuffer::frameCellToBufferIndex(int targetRow, int targetCol)
             }
         }
     }
+
     return pos;
+}
+
+void GapBuffer::clamp()
+{
+    // clamp to end of target line
+    bool shifted = false;
+    while (frameBuf[cursorRow][cursorCol] == '\0' && cursorCol > 0) 
+    {
+        cursorCol--;
+        shifted = true;
+    }
+
+    // if we actually clamped, and went back past a newline, we should shift
+    // back forward one 
+    if (shifted && frameBuf[cursorRow][cursorCol] != '\n' && frameBuf[cursorRow][cursorCol] != '\0') {
+        cursorCol++;
+    }
 }
 
 void GapBuffer::moveDownOneLine() 
@@ -287,38 +317,29 @@ void GapBuffer::moveDownOneLine()
         }
     }
     
-    if (cursorRow >= 3) {
+    if (!currentRowHasNewline && frameBuf[cursorRow][COL_COUNT - 1] == '\0') {
+        // move to end of the current line if we're already at the bottom
+        while (cursorCol < COL_COUNT && frameBuf[cursorRow][cursorCol] != '\0') {
+            cursorCol++;
+        }
+    }
+    else if (cursorRow >= 3) {
         // scroll frame down
         int nextStart = findNextLineStart(viewFrameStart);
         
-        if (nextStart >= totalChars() || !currentRowHasNewline) {
+        if (nextStart >= totalChars()) {
             return; // can't scroll down if there are no more lines
-        }            
+        }
 
         viewFrameStart = nextStart;
         refreshFrameBuffer();
     } 
     else {
-        if (!currentRowHasNewline && frameBuf[cursorRow + 1][0] == '\0' && frameBuf[cursorRow][39] == '\0') {
-            return;
-        }
         cursorRow++;
     }
     
-    int targetCol = cursorCol;
-
-    // find how long the target row actually is
-    int lineLen = 0;
-    for (int c = 0; c < COL_COUNT; c++) {
-        if (frameBuf[cursorRow][c] != '\0') {
-            lineLen = c + 1;
-        }
-        else {
-            break; // early return so we don't have to scan the whole line
-        }
-    }
-    
-    cursorCol = std::min(targetCol, lineLen);
+    // clamp to end of target line
+    clamp();
     
     // sync gap buffer to new cursor position
     int newPos = frameCellToBufferIndex(cursorRow, cursorCol);
@@ -342,21 +363,12 @@ void GapBuffer::moveUpOneLine()
     else {
         cursorRow--;
     }
-    
-    // clamp to end of target line
-    int targetCol = cursorCol;
-    // find how long the target row actually is
-    int lineLen = 0;
-    for (int c = 0; c < COL_COUNT - 1; c++) {
-        if (frameBuf[cursorRow][c] != '\0') {
-            lineLen = c; // -1 because we want the last valid index, which
-            // means skipping the newline character at the end of the line
-        } 
-    }
-    cursorCol = std::min(targetCol, lineLen);
 
+    clamp();
+    
     // sync gap buffer to new cursor position
     int newPos = frameCellToBufferIndex(cursorRow, cursorCol);
+
     while(gapStart > newPos) {
         moveLeft(false);
     }
@@ -384,6 +396,14 @@ void GapBuffer::moveToFrameEnd()
 
 char GapBuffer::getCharAt(int idx)
 {
+    // just return null char if out of bounds
+    if (idx < 0) {
+        return '\0';
+    }
+    else if (idx >= totalChars()) {
+        return '\0';
+    }
+
     if (idx < gapStart) {
         return buffer[idx];
     } 
@@ -410,7 +430,7 @@ void GapBuffer::backSpaceWord()
 {
     backSpace();
 
-    while (gapStart > 0 && buffer[gapStart - 1] != ' ' ) {
+    while (gapStart > 0 && buffer[gapStart - 1] != ' ' && buffer[gapStart - 1] != '\n') {
         backSpace();
     }
 }
@@ -431,7 +451,7 @@ void GapBuffer::deleteWord()
 {
     deleteChar();
 
-    while (gapEnd < buffer.size() && buffer[gapEnd] != ' ') {
+    while (gapEnd < buffer.size() && buffer[gapEnd] != ' ' && buffer[gapEnd] != '\n') {
         deleteChar();
     }
 }

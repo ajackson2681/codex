@@ -396,6 +396,17 @@ size_t LiquidCrystal::write(uint8_t value) {                      //print calls 
 	return 1; //assume success  added for Arduino 1
 }
 
+size_t LiquidCrystal::write(std::string str)
+{
+	size_t bw = 0;
+	
+	for (char c : str) {
+		bw += write(c);
+	}
+
+	return bw;
+}
+
 /************ low level data pushing commands **********/
 
 // write either command or data, with automatic 4/8-bit selection

@@ -44,10 +44,10 @@ private:
     int findPrevLineStart(int from);
     int findNextLineStart(int from);
 
-    int totalChars();
     
     int frameCellToBufferIndex(int targetRow, int targetCol);
-
+    void clamp();
+    
 public:
     // GapBuffer(LiquidCrystal& _lcd, int initialSize = DEFAULT_BUF_SIZE);
     GapBuffer(int initialSize = DEFAULT_BUF_SIZE);
@@ -130,4 +130,5 @@ public:
     const char (&getVisibleFrame())[ROW_COUNT][COL_COUNT];
     void invalidate();
     bool isStale();
+    int totalChars();
 };

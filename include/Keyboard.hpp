@@ -6,5 +6,5 @@
 
 class Keyboard {
 public:
-    static void ProcessInput(const hid_keyboard_report_t *report, uint8_t keyCode);
+    static void ProcessInput(uint8_t keycode, bool shift, bool ctrl);
 };
