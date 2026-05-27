@@ -125,7 +125,10 @@ void Keyboard::ProcessInput(uint8_t keycode, bool shift, bool ctrl)
                 buffer.insert('\n');      
             }
             break;
-        
+        case HID_KEY_TAB:
+            buffer.insert("  "); // insert two spaces instead of a tab
+            break;
+            
         default:
             uint8_t ascii = keycode2ascii[keycode][shift ? 1 : 0];
 

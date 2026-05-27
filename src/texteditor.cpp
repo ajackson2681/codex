@@ -54,7 +54,7 @@ void loadFile(FIL& fil)
 void saveFile(FIL& fil)
 {
     std::string path = "0:/document.txt";
-    FRESULT fr = f_open(&fil, path.c_str(), FA_WRITE);
+    FRESULT fr = f_open(&fil, path.c_str(), FA_OPEN_ALWAYS | FA_WRITE);
     
     if (fr != FR_OK) {
         return;
