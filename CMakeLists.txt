@@ -44,6 +44,8 @@ add_executable(texteditor
     src/LiquidCrystal.cpp
     src/hid.cpp
     src/Keyboard.cpp
+    src/FileSystem.cpp
+    src/Globals.cpp
     src/hardware.c)
 
 pico_set_program_name(texteditor "texteditor")
