@@ -247,9 +247,32 @@ void GapBuffer::moveToStart()
     refreshFrameBuffer();
 }
 
+void GapBuffer::moveToLineStart()
+{
+    while (cursorCol > 0) {
+        moveLeft();
+    }
+
+    refreshFrameBuffer();
+}
+
 void GapBuffer::moveToEnd() 
 {
     while (gapEnd < buffer.size()) {
+        moveRight();
+    }
+
+    refreshFrameBuffer();
+}
+
+void GapBuffer::moveToLineEnd()
+{
+    while ((frameBuf[cursorRow][cursorCol] != '\n' &&
+            frameBuf[cursorRow][cursorCol] != '\0'))  
+    {
+        if (cursorCol == COL_COUNT - 1) {
+            break;
+        }
         moveRight();
     }
 
@@ -384,12 +407,19 @@ void GapBuffer::moveToFrameStart()
 
 void GapBuffer::moveToFrameEnd()
 {
-    while (cursorCol < COL_COUNT && 
-           cursorRow < ROW_COUNT && 
-           frameBuf[cursorRow][cursorCol] != '\0') 
+    // move to bottom row
+    while (cursorRow < ROW_COUNT - 1) 
     {
+        if (frameBuf[cursorRow][cursorCol] == '\0' ||
+            frameBuf[cursorRow][cursorCol] == '\n') 
+        {
+            break;
+        }
         moveRight();
     }
+
+    moveToLineEnd(); // move to the line end once we've reached the bottom
+    // row
     
     refreshFrameBuffer();
 }

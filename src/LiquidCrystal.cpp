@@ -213,9 +213,9 @@ uint8_t	displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 void LiquidCrystal::clear()
 {
 	if (_en2 != 255) {
-		_chip=2;
-		command(LCD_CLEARDISPLAY); 
 		_chip=0;
+		command(LCD_CLEARDISPLAY); 
+		_chip=2;
 		command(LCD_CLEARDISPLAY);
 		delayPerHome();
 		setCursor(0,0);

@@ -92,10 +92,23 @@ public:
      * @brief Moves the cursor to the very beginning of the buffer
      */
     void moveToStart();
+
+    /**
+     * @brief Moves cursor to the beginning of the current line
+     * 
+     */
+    void moveToLineStart();
+
     /**
      * @brief Moves the cursor to the very end of the buffer
      */
     void moveToEnd();
+
+    /**
+     * @brief Moves cursor to the end of the current line
+     * 
+     */
+    void moveToLineEnd();
 
     /**
      * @brief Moves the cursor up by one line relative to the frame buffer.

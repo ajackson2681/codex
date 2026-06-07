@@ -5,6 +5,7 @@
 
 enum State {
     STARTUP,
+    INITIALIZATION,
     WRITING
 };
 
