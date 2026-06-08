@@ -5,6 +5,7 @@
 
 enum State {
     STARTUP,
+    DOCUMENT_SELECTION,
     INITIALIZATION,
     WRITING
 };

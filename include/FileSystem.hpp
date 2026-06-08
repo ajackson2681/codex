@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 #include <string>
 
 #include "f_util.h"
@@ -9,6 +10,7 @@
 class FileSystem
 {
 public:
+    static bool isMounted();
     static bool init();
     static void uninit();
     
@@ -37,8 +39,31 @@ public:
      */
     static void saveFile(const std::string& fileName, GapBuffer& src);
 
+
+    static std::vector<std::string>& getFileList();
+    static int getSelectionIndex();
+    static int getFileListOffset();
+
+    static void selectionDown();
+    static void selectionUp();
+    
+    static bool wasSelectionChanged();
+
+    static void selectFile();
+
 private:
     static FATFS fs;
     static FIL fil;
     static FILINFO fno;
+    static DIR dir;
+    static bool mounted;
+    
+    static bool selectionChanged;
+
+    static int selectedIndex;
+    
+    // offset in the file list that points to the first element to be displayed
+    static int fileListOffset;
+
+    static std::vector<std::string> fileList;
 };

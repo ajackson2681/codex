@@ -9,6 +9,8 @@ public:
     static void ProcessInput(uint8_t keycode, bool shift, bool ctrl);
 
 private:
-    static void CheckForEnter(uint8_t keycode);
+    static void StartupStateHandler(uint8_t keycode);
+    static void DocSelectStateHandler(uint8_t keycode);
+    static void WritingStateHandler(uint8_t keycode, bool shift, bool ctrl);
     static void HandleAscii(uint8_t keycode, bool shift, bool ctrl);
 };

@@ -10,19 +10,54 @@
 #include "Globals.hpp"
 #include "FileSystem.hpp"
 
+std::string selectedDocument = "";
+
 void tuh_mount_cb(uint8_t dev_addr) {}
 
 void tuh_umount_cb(uint8_t dev_addr) {}
 
-void initialize(bool validDoc)
+void initialize()
 {
     lcd.clear();
     
-    if (validDoc) {
-        FileSystem::loadFile("document.txt", buffer);
+    if (FileSystem::isMounted()) {
+        selectedDocument = FileSystem::getFileList().at(FileSystem::getSelectionIndex());
+        FileSystem::loadFile(selectedDocument, buffer);
     }
 
     writerState = State::WRITING;
+
+    lcd.blink();
+}
+
+void selectDocument()
+{
+
+    lcd.noBlink();
+
+    if (!FileSystem::isMounted() || FileSystem::getFileList().size() == 0) {
+        writerState = State::INITIALIZATION;
+        return;
+    }
+    
+    if (FileSystem::wasSelectionChanged()) {
+        lcd.clear();
+
+        if (FileSystem::getFileList().size() > 0) {
+            auto selected = FileSystem::getSelectionIndex();
+            auto offset = FileSystem::getFileListOffset();
+            for (int i = 0; i < 4; i++) {
+                if (i == selected) {
+                    lcd.write("> ");
+                }
+                else {
+                    lcd.write("  ");
+                }
+    
+                lcd.write(FileSystem::getFileList().at(i + offset)+'\r');
+            }
+        }
+    }
 }
 
 void handleInput()
@@ -54,8 +89,8 @@ void handleInput()
     buffer.getCursorPos(row,col);
     lcd.setCursor(col,row);
 
-    if (shouldSave) {
-        FileSystem::saveFile("document.txt", buffer);
+    if (shouldSave && selectedDocument != "") {
+        FileSystem::saveFile(selectedDocument, buffer);
         shouldSave = false;
         gpio_put(PICO_DEFAULT_LED_PIN, true);
     }
@@ -80,14 +115,6 @@ int main()
 
     if (FileSystem::init()) {
         lcd.write("SD Card Detected!\r");
-
-        if (FileSystem::fileExists("document.txt")) {
-            lcd.write("Document detected!\r");
-            validDoc = true;
-        }
-        else {
-            lcd.write("No document detected!\r");
-        }
     }
     else {
         lcd.write("No SD Card Detected!\r");
@@ -104,9 +131,14 @@ int main()
 
         switch (writerState) {
             case State::STARTUP:
+                // don't do anything during startup. Just read input and wait
+                // for an enter key press
+                break;
+            case State::DOCUMENT_SELECTION: 
+                selectDocument();
                 break;
             case State::INITIALIZATION:
-                initialize(validDoc);
+                initialize();
                 break;
             case State::WRITING:
                 handleInput();
