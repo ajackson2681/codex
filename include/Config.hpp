@@ -11,3 +11,5 @@
 
 #define E1_PIN 22
 #define E2_PIN 20
+
+#define CD_PIN 26

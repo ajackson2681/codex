@@ -18,10 +18,10 @@ void Keyboard::DocSelectStateHandler(uint8_t keycode)
 {
     switch (keycode) {
         case HID_KEY_ARROW_UP:
-            FileSystem::selectionUp();
+            FileSystem::SelectionUp();
             break;
         case HID_KEY_ARROW_DOWN:
-            FileSystem::selectionDown();
+            FileSystem::SelectionDown();
             break;
         case HID_KEY_ENTER:
             writerState = State::INITIALIZATION;
