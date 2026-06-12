@@ -83,7 +83,7 @@ void FileSystem::EnumerateFiles()
         }
     }
 
-    fileList.push_back("New Document");
+    fileList.push_back(NEW_FILE_NAME);
 
     f_closedir(&dir);
 }
@@ -200,13 +200,45 @@ void FileSystem::SaveFile(const std::string& fileName, GapBuffer& src)
     }
 }
 
+
 bool FileSystem::HasFiles()
 {
-    return fileList.size() > 0;
+    return fileList.size() > 1; // account for "New File" entry
+}
+
+void FileSystem::TrySaveFile()
+{
+    if (!mounted) {
+        return;
+    }
+
+    std::string& selectedFile = GetSelectedFile();
+    if (selectedFile == NEW_FILE_NAME) {
+        return; // maybe go to a "save as" flow in the future?
+    }
+
+    SaveFile(selectedFile, buffer);
+}
+
+void FileSystem::TryLoadFile()
+{
+    if (!mounted) {
+        return;
+    }
+
+    std::string& selectedFile = GetSelectedFile();
+    if (selectedFile == NEW_FILE_NAME) {
+        return;
+    }
+
+    LoadFile(selectedFile, buffer);
 }
 
 void FileSystem::Uninit()
 {
     f_unmount("0:");
     mounted = false;
+    fileList.clear();
+    selectedIndex = 0;
+    fileListOffset = 0;
 }

@@ -4,12 +4,12 @@
 #include <string>
 #include <cstdint>
 
+#include "Config.hpp"
+
 #define DEFAULT_BUF_SIZE 32
 
 #define SHOW_GAP false
 
-#define COL_COUNT 40
-#define ROW_COUNT 4
 #define FRAME_SIZE (COL_COUNT * ROW_COUNT)
 
 class GapBuffer {
@@ -49,7 +49,6 @@ private:
     void clamp();
     
 public:
-    // GapBuffer(LiquidCrystal& _lcd, int initialSize = DEFAULT_BUF_SIZE);
     GapBuffer(int initialSize = DEFAULT_BUF_SIZE);
     ~GapBuffer();
 

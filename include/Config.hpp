@@ -13,3 +13,6 @@
 #define E2_PIN 20
 
 #define CD_PIN 26
+
+#define COL_COUNT 40
+#define ROW_COUNT 4

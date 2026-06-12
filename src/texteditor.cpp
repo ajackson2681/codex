@@ -12,8 +12,6 @@
 #include "Keyboard.hpp"
 #include "Version.hpp"
 
-std::string selectedDocument = "";
-
 void tuh_mount_cb(uint8_t dev_addr) {}
 
 void tuh_umount_cb(uint8_t dev_addr) {}
@@ -24,12 +22,7 @@ void initialize()
     // turn the blinking cursor back on
     lcd.blink();
     
-    if (FileSystem::Mounted() && FileSystem::HasFiles()) {
-        selectedDocument = FileSystem::GetSelectedFile();
-        if (selectedDocument != "New File") {
-            FileSystem::LoadFile(selectedDocument, buffer);
-        }
-    }
+    FileSystem::TryLoadFile();
 
     writerState = State::WRITING;
 
@@ -71,8 +64,8 @@ void selectDocument()
     }
 }
 
-void handleInput()
-{
+void renderScreen()
+{    
     if (buffer.isStale()) {
         auto b = buffer.getVisibleFrame();
         
@@ -100,8 +93,8 @@ void handleInput()
     buffer.getCursorPos(row,col);
     lcd.setCursorPos(row,col);
 
-    if (shouldSave && selectedDocument != "") {
-        FileSystem::SaveFile(selectedDocument, buffer);
+    if (shouldSave) {
+        FileSystem::TrySaveFile();
         shouldSave = false;
     }
 }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstddef>
 #include <cstdint>
 #include <vector>
@@ -79,6 +81,9 @@ public:
     static bool HasFiles();
     static void EnumerateFiles();
 
+    static void TrySaveFile();
+    static void TryLoadFile();
+    
     static void Uninit();
     
 private:

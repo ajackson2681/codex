@@ -3,6 +3,8 @@
 #include "GapBuffer.hpp"
 #include "LCD.hpp"
 
+#define NEW_FILE_NAME "New File"
+
 enum State {
     STARTUP,
     DOCUMENT_SELECTION,
@@ -15,5 +17,4 @@ extern State writerState;
 extern GapBuffer buffer;
 
 extern bool shouldSave;
-extern bool pressedEnter;
 extern LCD lcd;

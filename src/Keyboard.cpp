@@ -1,9 +1,6 @@
 #include "Keyboard.hpp"
-#include <functional>
 #include "Globals.hpp"
 #include "FileSystem.hpp"
-
-extern std::function<void(uint8_t)> kbCb;
 
 static uint8_t const keycode2ascii[128][2] = { HID_KEYCODE_TO_ASCII };
 

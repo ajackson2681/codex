@@ -4,7 +4,6 @@
 GapBuffer buffer;
 
 bool shouldSave = false;
-bool pressedEnter = false;
 
 State writerState = State::STARTUP;
 
