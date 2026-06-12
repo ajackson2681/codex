@@ -10,22 +10,21 @@
 #include "ff.h"
 #include "GapBuffer.hpp"
 
-class FileSystem
+namespace FileSystem
 {
-public:
     /**
      * @brief Attempts to mount the SD card if one is inserted
      * 
      * @return true if SD card was successfully mounted
      * @return false if SD card was unsuccessfully mounted
      */
-    static bool Init();
+    bool Init();
 
     /**
      * @brief Polling check that reads the card detect pin and attemtps to mount
      * the card if it's not already
      */
-    static void Check();
+    void Check();
 
     /**
      * @brief Checks if card is inserted
@@ -33,7 +32,7 @@ public:
      * @return true if Card Detect pin is active
      * @return false if not
      */
-    static bool CardDetected();
+    bool CardDetected();
 
     /**
      * @brief Returns whether or not the SD card is mounted
@@ -41,7 +40,7 @@ public:
      * @return true if SD card is mounted
      * @return false 
      */
-    static bool Mounted();
+    bool Mounted();
     
     /**
      * @brief Checks if a file exists in the mounted card. 
@@ -50,7 +49,7 @@ public:
      * @return true if the file exists
      * @return false if the file doesnt exist or if there is no mounted card
      */
-    static bool FileExists(const std::string& fileName);
+    bool FileExists(const std::string& fileName);
 
     /**
      * @brief Loads specified file into the gap buffer
@@ -58,7 +57,7 @@ public:
      * @param fileName 
      * @param dest 
      */
-    static void LoadFile(const std::string& fileName, GapBuffer& dest);
+    void LoadFile(const std::string& fileName, GapBuffer& dest);
 
     /**
      * @brief Saves the gap buffer to the specified file
@@ -66,40 +65,23 @@ public:
      * @param fileName 
      * @param src 
      */
-    static void SaveFile(const std::string& fileName, GapBuffer& src);
+    void SaveFile(const std::string& fileName, GapBuffer& src);
 
-    static void ForEachVisibleFile(std::function<void(const std::string&, int)> callback);
+    void ForEachVisibleFile(std::function<void(const std::string&, int)> callback);
     
-    static std::string& GetSelectedFile();
+    std::string& GetSelectedFile();
 
-    static int GetSelectedIndex();
-    static void SelectionDown();
-    static void SelectionUp();
+    int GetSelectedIndex();
+    void SelectionDown();
+    void SelectionUp();
     
-    static bool SelectionChanged();
+    bool SelectionChanged();
 
-    static bool HasFiles();
-    static void EnumerateFiles();
+    bool HasFiles();
+    void EnumerateFiles();
 
-    static void TrySaveFile();
-    static void TryLoadFile();
+    void TrySaveFile();
+    void TryLoadFile();
     
-    static void Uninit();
-    
-private:
-    static FATFS fs;
-    static FIL fil;
-    static FILINFO fno;
-    static DIR dir;
-    
-    static bool mounted;
-    static bool selectionChanged;
-    
-    // currently selected document in the visible list
-    static int selectedIndex;
-    // offset in the file list that points to the first element to be displayed
-    static int fileListOffset;
-    
-    static std::vector<std::string> fileList;
-
+    void Uninit();
 };
