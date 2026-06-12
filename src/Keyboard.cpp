@@ -104,10 +104,10 @@ void Keyboard::WritingStateHandler(uint8_t keycode, bool shift, bool ctrl)
         
         case HID_KEY_ENTER:       
             if (ctrl && shift) {
-                // buffer.insertNewlineAbove();
+                buffer.insertNewlineAbove();
             }
             else if (ctrl) {
-                // buffer.insertNewlineBelow();
+                buffer.insertNewlineBelow();
             }
             else {
                 buffer.insert('\n');      
@@ -129,7 +129,6 @@ void Keyboard::HandleAscii(uint8_t keycode, bool shift, bool ctrl)
     if (ctrl) {
         switch(keycode) {
             case HID_KEY_S:
-                // TODO save file
                 shouldSave = true;
                 break;
         }
