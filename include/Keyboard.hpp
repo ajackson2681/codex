@@ -6,7 +6,7 @@
 
 class Keyboard {
 public:
-    static void ProcessInput(uint8_t keycode, bool shift, bool ctrl);
+    static void ProcessInput(uint8_t keycode, bool shift, bool ctrl, bool alt);
 
 private:
     static void StartupStateHandler(uint8_t keycode);

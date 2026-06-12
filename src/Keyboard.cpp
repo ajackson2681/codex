@@ -138,7 +138,7 @@ void Keyboard::HandleAscii(uint8_t keycode, bool shift, bool ctrl)
     }
 }
 
-void Keyboard::ProcessInput(uint8_t keycode, bool shift, bool ctrl)
+void Keyboard::ProcessInput(uint8_t keycode, bool shift, bool ctrl, bool alt)
 {
     switch (writerState) {
         case State::STARTUP:

@@ -162,8 +162,9 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
 
         bool const shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
         bool const ctrl = report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
-        
-        Keyboard::ProcessInput(keycode, shift, ctrl);
+        bool const alt = report->modifier & (KEYBOARD_MODIFIER_LEFTALT | KEYBOARD_MODIFIER_RIGHTALT);
+
+        Keyboard::ProcessInput(keycode, shift, ctrl, alt);
       }
     }
     // TODO example skips key released
