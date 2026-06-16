@@ -20,3 +20,4 @@ pcb/**/*-backups/
 *.step
 *.stl
 *.STEP
+.history/
