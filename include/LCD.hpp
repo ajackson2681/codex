@@ -41,6 +41,10 @@ public:
     // for these, we just always assume display on (bit 2 = high, bits 0 & 1 are
     // the cursor and blinking bits respectively, which we can just set to 0 or 1).
     // Additionally, we just assume the cursor is always blinking if it's on.
+    // NOTE: I found out that the cursor bit (bit 1) and the blink bit (bit 0)
+    // are two entirely separate things. If you enable both of them, you'll have
+    // the underline cursor and the blinking block cursor both, which looks weird
+    // so this is ACTUALLY only setting the blink bit.
     static constexpr uint8_t CURSOR_ON       = 0b0000'1101;
     static constexpr uint8_t CURSOR_OFF      = 0b0000'1100;
     

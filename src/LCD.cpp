@@ -60,6 +60,8 @@ void LCD::initialize(uint8_t en)
 
     // finally, set the entry mode, which we're just defaulting to always
     // being increment (left to right) and no shift (screen stays fixed)
+    // adding a 10ms delay here just to be safe since I was seeing sometimes
+    // garbled characters
     sendByte(Command::SET_ENTRY_MODE, false, en, MS_TO_US(10));
 }
 
