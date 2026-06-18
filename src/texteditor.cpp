@@ -9,6 +9,7 @@
 #include "GapBuffer.hpp"
 #include "Globals.hpp"
 #include "FileSystem.hpp"
+#include "Config.hpp"
 
 std::string selectedDocument = "";
 
@@ -109,7 +110,7 @@ int main()
 
     lcd.begin(40, 4);
     lcd.blink();
-    lcd.write("CODEX v1.0.0\r");
+    lcd.write("CODEX v"+versionString()+"\r");
 
     bool validDoc = false;
 
