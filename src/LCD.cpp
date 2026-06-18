@@ -46,21 +46,21 @@ void LCD::initialize(uint8_t en)
     // spec says wait for more than 37us, so wait 40
     sleep_us(DEFAULT_DELAY); 
 
-    sendCommand(Command::TWO_LINE_MODE, en, DEFAULT_DELAY);
+    sendByte(Command::TWO_LINE_MODE, false, en);
 
     // no idea why, but the spec says to send this again
-    sendCommand(Command::TWO_LINE_MODE, en, DEFAULT_DELAY);
+    sendByte(Command::TWO_LINE_MODE, false, en);
 
     // start with cursor off, we might only want to display information, and
     // not have input
-    sendCommand(Command::CURSOR_OFF, en, DEFAULT_DELAY);
+    sendByte(Command::CURSOR_OFF, false, en);
 
     // sequence says to send clear display here
-    sendCommand(Command::CLEAR_DISPLAY, en, MS_TO_US(2));
+    sendByte(Command::CLEAR_DISPLAY, false, en, MS_TO_US(2));
 
     // finally, set the entry mode, which we're just defaulting to always
     // being increment (left to right) and no shift (screen stays fixed)
-    sendCommand(Command::SET_ENTRY_MODE, en, MS_TO_US(10));
+    sendByte(Command::SET_ENTRY_MODE, false, en, MS_TO_US(10));
 }
 
 
@@ -82,53 +82,35 @@ void LCD::clear()
 {
     // send to both, since we want the whole display cleared
     // spec says clear display takes 1.52ms, so we'll wait 2ms just to be safe
-    sendCommand(Command::CLEAR_DISPLAY, e1, MS_TO_US(2)); 
-    sendCommand(Command::CLEAR_DISPLAY, e2, MS_TO_US(2)); 
+    sendByte(Command::CLEAR_DISPLAY, false, e1, MS_TO_US(2)); 
+    sendByte(Command::CLEAR_DISPLAY, false, e2, MS_TO_US(2)); 
 
     // after clearing, move the cursor to 0,0
     setCursorPos(0, 0); 
 }
 
-void LCD::sendChar(char c) {
+
+void LCD::sendByte(uint8_t value, bool isData, uint8_t en, uint32_t delayUsAfter) {
     bool prevRs = gpio_get(rs);
     
-    gpio_put(rs, true); // set RS high to write data (low is for commands)
+    gpio_put(rs, isData); // isData = true if writing a character, or false if issuing a command
 
-    uint8_t curEnable = currentEnable();
-
-    int highNibble = (c >> 4) & 0xf;
-    int lowNibble = c & 0xf;
+    int highNibble = (value >> 4) & 0xf;
+    int lowNibble = value & 0xf;
 
     writeNibble(highNibble);
-    pulse(curEnable);
+    pulse(en);
 
     writeNibble(lowNibble);
-    pulse(curEnable);
+    pulse(en);
 
     gpio_put(rs, prevRs); // restore previous RS state, likely to be low
 
-    incrementCursor();
-    
-    sleep_us(DEFAULT_DELAY);
-}
-
-void LCD::sendCommand(uint8_t cmd, uint8_t en, uint32_t delayUsAfter) {
-
-    // rs needs to be low to send a command
-    gpio_put(rs, false);
-    
-    uint8_t highNibble = (cmd >> 4) & 0xf;
-    uint8_t lowNibble = cmd & 0xf;
-
-    writeNibble(highNibble);
-    pulse(en);
-
-    writeNibble(lowNibble);
-    pulse(en);
-
-    if (delayUsAfter > 0) {
-        sleep_us(delayUsAfter);
+    if (isData) { // only increment cursor if we're writing data, not if we're sending a command
+        incrementCursor();
     }
+    
+    sleep_us(delayUsAfter);
 }
 
 void LCD::writeNibble(uint8_t value)
@@ -152,7 +134,7 @@ void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
     uint8_t curEnable = currentEnable();
 
     // set DDRAM address to move cursor to correct position
-    sendCommand(Command::SET_DDRAM_ADDRESS(row, col), curEnable, DEFAULT_DELAY);
+    sendByte(Command::SET_DDRAM_ADDRESS(row, col), false, curEnable);
 
     if (cursorEnabled) {
         // this is pretty inefficient, but it works, and it only takes like
@@ -187,7 +169,7 @@ uint8_t LCD::getCursorRow() {
 void LCD::write(char c)
 {
     if (c != '\n') {
-        sendChar(c);
+        sendByte(c, true, currentEnable());
     }
     else {
         if (++row >= 4) {
@@ -210,16 +192,16 @@ void LCD::enableCursor() {
     cursorEnabled = true;
     uint8_t curEnable = currentEnable();
     uint8_t otherEnable = (curEnable == e1) ? e2 : e1;
-    sendCommand(Command::CURSOR_ON, curEnable, DEFAULT_DELAY);
-    sendCommand(Command::CURSOR_OFF, otherEnable, DEFAULT_DELAY);
+    sendByte(Command::CURSOR_ON, false, curEnable);
+    sendByte(Command::CURSOR_OFF, false, otherEnable);
 }
 
 void LCD::disableCursor() {
     cursorEnabled = false;
     // both of these can just be set to off, since it doesn't matter which one
     // is the "current" enable.
-    sendCommand(Command::CURSOR_OFF, e1, DEFAULT_DELAY);
-    sendCommand(Command::CURSOR_OFF, e2, DEFAULT_DELAY);
+    sendByte(Command::CURSOR_OFF, false, e1);
+    sendByte(Command::CURSOR_OFF, false, e2);
 }
 
 void LCD::incrementCursor() {

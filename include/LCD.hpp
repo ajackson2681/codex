@@ -146,24 +146,15 @@ private:
     void setOutput(uint8_t pin);
 
     /**
-     * @brief Sends command a specific enable pin. Sends the command in two
-     * nibbles, since we're using 4-bit mode. This uses writeNibble and pulse
-     * to send the command to the correct specified pin.
+     * @brief Sends a byte to the LCD, in two nibbles since we're using 4 bit
+     * mode. 
      * 
-     * @param cmd command to send
-     * 
-     * @param en which enable pin to use, either e1 or e2 
+     * @param value the byte to send
+     * @param isData whether this byte is data (true) or a command (false).  
+     * @param en which enable pin to pulse, either e1 or e2
+     * @param delayUsAfter how long to wait after sending the byte, in microseconds
      */
-    void sendCommand(uint8_t cmd, uint8_t en, uint32_t delayUsAfter);
-
-    /**
-     * @brief Writes a character to DDRAM at the current cursor position, 
-     * on the current enable pin. This uses the default delay after writing a 
-     * character, and then updates the local cursor position.
-     * 
-     * @param c Character to write 
-     */
-    void sendChar(char c);
+    void sendByte(uint8_t value, bool isData, uint8_t en, uint32_t delayUsAfter = DEFAULT_DELAY);
 
     /**
      * @brief helper function to write a single nibble to the LCD. This function
