@@ -9,7 +9,8 @@ The Codex is an attempt at an open-source, distraction-free writing device inspi
 Codex is under active development. Current state:
 
 **Working:**
-- [x] LCD driver (40x4 dual-HD44780, ported from [LiquidCrystal440](https://github.com/jurs/liquidcrystal440)). Port can be found here: [LiquidCrystal440-pico](https://github.com/ajackson2681/liquidcrystal440-pico) (it's basically just wrappers around the Arduino calls).
+- [x] LCD driver
+  - Originally used a derivation of the Arduino LiquidCrystal library (noted below under [Libraries Used](#libraries-used) and [Acknowledgements](#acknowledgments)). I have since written a custom one from the ground up specific for this project.
 - [x] USB HID keyboard input via TinyUSB
 - [x] Gap buffer with insert/delete/backspace
 - [x] Character, word, line, frame, and document navigation
@@ -46,7 +47,7 @@ Codex is under active development. Current state:
 | Component | Notes |
 |---|---|
 | Raspberry Pi Pico (RP2040) | Mounted via socket currently, likely castellated edge pads on the final PCB |
-| 40x4 HD44780-compatible character LCD (current dev setup uses an ST7066U controller) | Dual controller (EN1/EN2), 4-bit mode |
+| 40x4 ST7066U character LCD | Dual controller (EN1/EN2), 4-bit mode |
 | USB OTG converter | USB port for keyboard |
 | SD card socket | SPI mode |
 | Slide potentiometers (x2) | Contrast (to LCD V0) and brightness (to analog GPIO) |
@@ -74,7 +75,8 @@ Built with the **Raspberry Pi Pico SDK**
 
 ### Libraries used
 
-- Derivation of [LiquidCrystal440](https://github.com/jurs/liquidcrystal440), which is in turn a derivation of the [Original Arduino Library](https://github.com/arduino-libraries/LiquidCrystal). I just named it back to **LiquidCrystal** though.
+- Originally used a derivation of [LiquidCrystal440](https://github.com/jurs/liquidcrystal440), which is in turn a derivation of the [Original Arduino Library](https://github.com/arduino-libraries/LiquidCrystal).
+  - Now uses a driver that is purpose-written for this device 
 - **TinyUSB** - USB HID host
 - **no-OS-FatFS-SD-SPI-RPi-Pico** - SD card / FAT filesystem (submodule)
 
@@ -121,14 +123,17 @@ For a compact keyboard, a 65% or 75% layout is recommended for dedicated Home/En
 
 ## License
 
-Codex uses a split-license approach:
+The Codex uses a split-license approach:
 
 - All non-third-party code: **GPL v3**
-- **LiquidCrystal library** (`include/LiquidCrystal.hpp` and `src/LiquidCrystal.cpp`): **LGPL v2.1**, consistent with the original [LiquidCrystal](https://github.com/arduino-libraries/LiquidCrystal), which carried over into [LiquidCrystal440](https://github.com/jurs/liquidcrystal440) by jurs, and finally into this project
-- **Hardware** (`pcb/`, KiCad) and **Enclosures** (`3dmodels/`,
-  FreeCAD): **CERN-OHL-S v2**
+- Hardware (`pcb/`) and Enclosures (`3dmodels/`): **CERN-OHL-S v2**
 
-See the `LICENSE` file in each directory for full text, or `LiquidCrystal.LICENSE` for the LiquidCrystal library info.
+All third-party libraries retain their original licensing:
+
+- TinyUSB: **MIT**
+- no-OS-FatFS-SD-SPI-RPi-Pico **Apache 2.0**
+
+See the `LICENSE` file in each directory for full text.
 
 ---
 
