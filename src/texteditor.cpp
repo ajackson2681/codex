@@ -111,43 +111,44 @@ int main()
     lcd.initialize();
     lcd.enableCursor();
     
-    lcd.write("HELLO\r");
-    lcd.write("WORLD\r");
-    lcd.write("TEST\r");
-    lcd.write("123");
+    lcd.write("CODEX v1.0.0\r");
 
-    // lcd.write("TEST\r");
-    // lcd.write("AGAIN");
-    // lcd.write("WTF\r");
-    // lcd.write("DO I DO?");
-    // if (FileSystem::CardDetected()) {
-    //     lcd.write("SD Card Detected.\r");
-    // }
-    // else {
-    //     lcd.write("No SD Card Detected. Can't save files.\r");
-    // }
+    bool validDoc = false;
+
+    if (FileSystem::init()) {
+        lcd.write("SD Card Detected!\r");
+    }
+    else {
+        lcd.write("No SD Card Detected!\r");
+    }
     
-    // lcd.write("Press enter to continue.");
+    lcd.write("Press enter to continue.");
 
+    gpio_put(PICO_DEFAULT_LED_PIN, true);
+
+    bool doOnce = false;
+    
     while (true) {
         tuh_task();
 
-        // switch (writerState) {
-        //     case State::STARTUP:
-        //         // don't do anything during startup. Just read input and wait
-        //         // for an enter key press
-        //         break;
-        //     case State::DOCUMENT_SELECTION: 
-        //         selectDocument();
-        //         break;
-        //     case State::INITIALIZATION:
-        //         initialize();
-        //         break;
-        //     case State::WRITING:
-        //         renderScreen();
-        //         break;
-        //     default:
-        //         break;
-        // }
+        switch (writerState) {
+            case State::STARTUP:
+                // don't do anything during startup. Just read input and wait
+                // for an enter key press
+                break;
+            case State::DOCUMENT_SELECTION: 
+                selectDocument();
+                break;
+            case State::INITIALIZATION:
+                initialize();
+                break;
+            case State::WRITING:
+                handleInput();
+                break;
+            default:
+                break;
+        }
     } 
+
+    FileSystem::uninit();
 }
