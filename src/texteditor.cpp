@@ -2,7 +2,6 @@
 #include <functional>
 
 #include "pico/stdlib.h"
-#include "LiquidCrystal.hpp"
 #include "bsp/board_api.h"
 #include "tusb.h"
 
@@ -29,13 +28,13 @@ void initialize()
 
     writerState = State::WRITING;
 
-    lcd.blink();
+    lcd.enableCursor();
 }
 
 void selectDocument()
 {
 
-    lcd.noBlink();
+    lcd.disableCursor();
 
     if (!FileSystem::isMounted() || FileSystem::getFileList().size() == 0) {
         writerState = State::INITIALIZATION;
@@ -68,7 +67,7 @@ void handleInput()
         gpio_put(PICO_DEFAULT_LED_PIN, false);
         
         auto b = buffer.getVisibleFrame();
-        lcd.setCursor(0,0);
+        lcd.setCursorPos(0,0);
         for (int i = 0; i < ROW_COUNT; i++) {
             for (int j = 0; j < COL_COUNT; j++) {
                 char c = b[i][j];
@@ -89,7 +88,7 @@ void handleInput()
 
     int row,col;
     buffer.getCursorPos(row,col);
-    lcd.setCursor(col,row);
+    lcd.setCursorPos(row,col);
 
     if (shouldSave && selectedDocument != "") {
         FileSystem::saveFile(selectedDocument, buffer);
@@ -109,46 +108,46 @@ int main()
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
-    lcd.begin(40, 4);
-    lcd.blink();
-    lcd.write("CODEX v" CODEX_VERSION_STRING "\r");
-
-    bool validDoc = false;
-
-    if (FileSystem::init()) {
-        lcd.write("SD Card Detected!\r");
-    }
-    else {
-        lcd.write("No SD Card Detected!\r");
-    }
+    lcd.initialize();
+    lcd.enableCursor();
     
-    lcd.write("Press enter to continue.");
+    lcd.write("HELLO\r");
+    lcd.write("WORLD\r");
+    lcd.write("TEST\r");
+    lcd.write("123");
 
-    gpio_put(PICO_DEFAULT_LED_PIN, true);
-
-    bool doOnce = false;
+    // lcd.write("TEST\r");
+    // lcd.write("AGAIN");
+    // lcd.write("WTF\r");
+    // lcd.write("DO I DO?");
+    // if (FileSystem::CardDetected()) {
+    //     lcd.write("SD Card Detected.\r");
+    // }
+    // else {
+    //     lcd.write("No SD Card Detected. Can't save files.\r");
+    // }
     
+    // lcd.write("Press enter to continue.");
+
     while (true) {
         tuh_task();
 
-        switch (writerState) {
-            case State::STARTUP:
-                // don't do anything during startup. Just read input and wait
-                // for an enter key press
-                break;
-            case State::DOCUMENT_SELECTION: 
-                selectDocument();
-                break;
-            case State::INITIALIZATION:
-                initialize();
-                break;
-            case State::WRITING:
-                handleInput();
-                break;
-            default:
-                break;
-        }
+        // switch (writerState) {
+        //     case State::STARTUP:
+        //         // don't do anything during startup. Just read input and wait
+        //         // for an enter key press
+        //         break;
+        //     case State::DOCUMENT_SELECTION: 
+        //         selectDocument();
+        //         break;
+        //     case State::INITIALIZATION:
+        //         initialize();
+        //         break;
+        //     case State::WRITING:
+        //         renderScreen();
+        //         break;
+        //     default:
+        //         break;
+        // }
     } 
-
-    FileSystem::uninit();
 }
