@@ -111,7 +111,7 @@ int main()
     lcd.initialize();
     lcd.enableCursor();
     
-    lcd.write("CODEX v1.0.0\r");
+    lcd.write("CODEX v"+versionString()+"\r");
 
     bool validDoc = false;
 
