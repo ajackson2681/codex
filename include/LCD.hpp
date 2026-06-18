@@ -157,6 +157,15 @@ private:
     void sendCommand(uint8_t cmd, uint8_t en, uint32_t delayUsAfter);
 
     /**
+     * @brief Writes a character to DDRAM at the current cursor position, 
+     * on the current enable pin. This uses the default delay after writing a 
+     * character, and then updates the local cursor position.
+     * 
+     * @param c Character to write 
+     */
+    void sendChar(char c);
+
+    /**
      * @brief helper function to write a single nibble to the LCD. This function
      * does NOT pulse the enable pin, since it doesn't know which one to pulse.
      * The caller is responsible for pulsing the correct enable pin after
@@ -191,5 +200,10 @@ private:
      */
     uint8_t currentEnable();
 
+    /**
+     * @brief Moves the cursor by one to the right. If we hit the end of a line,
+     * it moves down to the beginning of the next line. If we hit the end of the
+     * display, it wraps around to the beginning of the first line.
+     */
     void incrementCursor();
 };

@@ -81,10 +81,35 @@ void LCD::setOutput(uint8_t pin) {
 void LCD::clear()
 {
     // send to both, since we want the whole display cleared
-    sendCommand(Command::CLEAR_DISPLAY, e1, 0); // don't need to delay on the first one, since the
-    // second command is on a different chip
-    sendCommand(Command::CLEAR_DISPLAY, e2, MS_TO_US(2)); // spec says clear display takes 1.52ms, so we'll wait 2ms
-    // setCursorPos(0, 0); TODO: is this needed?
+    // spec says clear display takes 1.52ms, so we'll wait 2ms just to be safe
+    sendCommand(Command::CLEAR_DISPLAY, e1, MS_TO_US(2)); 
+    sendCommand(Command::CLEAR_DISPLAY, e2, MS_TO_US(2)); 
+
+    // after clearing, move the cursor to 0,0
+    setCursorPos(0, 0); 
+}
+
+void LCD::sendChar(char c) {
+    bool prevRs = gpio_get(rs);
+    
+    gpio_put(rs, true); // set RS high to write data (low is for commands)
+
+    uint8_t curEnable = currentEnable();
+
+    int highNibble = (c >> 4) & 0xf;
+    int lowNibble = c & 0xf;
+
+    writeNibble(highNibble);
+    pulse(curEnable);
+
+    writeNibble(lowNibble);
+    pulse(curEnable);
+
+    gpio_put(rs, prevRs); // restore previous RS state, likely to be low
+
+    incrementCursor();
+    
+    sleep_us(DEFAULT_DELAY);
 }
 
 void LCD::sendCommand(uint8_t cmd, uint8_t en, uint32_t delayUsAfter) {
@@ -128,7 +153,7 @@ void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
 
     // set DDRAM address to move cursor to correct position
     sendCommand(Command::SET_DDRAM_ADDRESS(row, col), curEnable, DEFAULT_DELAY);
-    
+
     if (cursorEnabled) {
         // this is pretty inefficient, but it works, and it only takes like
         // ~160us, so I'm not going to sweat it
@@ -162,26 +187,7 @@ uint8_t LCD::getCursorRow() {
 void LCD::write(char c)
 {
     if (c != '\n') {
-        bool prevRs = gpio_get(rs);
-        
-        gpio_put(rs, true); // set RS high to write data (low is for commands)
-    
-        uint8_t curEnable = currentEnable();
-    
-        int highNibble = (c >> 4) & 0xf;
-        int lowNibble = c & 0xf;
-    
-        writeNibble(highNibble);
-        pulse(curEnable);
-    
-        writeNibble(lowNibble);
-        pulse(curEnable);
-
-        gpio_put(rs, prevRs); // restore previous RS state, likely to be low
-
-        incrementCursor();
-        
-        sleep_us(DEFAULT_DELAY);
+        sendChar(c);
     }
     else {
         if (++row >= 4) {
@@ -191,7 +197,6 @@ void LCD::write(char c)
         
         setCursorPos(row,col);
     }
-
 }
 
 void LCD::write(const std::string& str)
