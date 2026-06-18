@@ -128,6 +128,14 @@ void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
 
     // set DDRAM address to move cursor to correct position
     sendCommand(Command::SET_DDRAM_ADDRESS(row, col), curEnable, DEFAULT_DELAY);
+    
+    if (cursorEnabled) {
+        // this is pretty inefficient, but it works, and it only takes like
+        // ~160us, so I'm not going to sweat it
+        disableCursor(); // disable both cursors
+        enableCursor(); // enable the current chip's cursor (also technically
+        // disables the other chip's cursor again, but whatever)
+    }
 }
 
 void LCD::setCursorCol(uint8_t col_) {
@@ -153,7 +161,7 @@ uint8_t LCD::getCursorRow() {
 
 void LCD::write(char c)
 {
-    if (c != '\r') {
+    if (c != '\n') {
         bool prevRs = gpio_get(rs);
         
         gpio_put(rs, true); // set RS high to write data (low is for commands)
@@ -203,6 +211,8 @@ void LCD::enableCursor() {
 
 void LCD::disableCursor() {
     cursorEnabled = false;
+    // both of these can just be set to off, since it doesn't matter which one
+    // is the "current" enable.
     sendCommand(Command::CURSOR_OFF, e1, DEFAULT_DELAY);
     sendCommand(Command::CURSOR_OFF, e2, DEFAULT_DELAY);
 }
