@@ -64,14 +64,14 @@ void selectDocument()
 void handleInput()
 {
     if (buffer.isStale()) {
-        gpio_put(PICO_DEFAULT_LED_PIN, false);
-        
         auto b = buffer.getVisibleFrame();
+        
         lcd.setCursorPos(0,0);
+    
         for (int i = 0; i < ROW_COUNT; i++) {
             for (int j = 0; j < COL_COUNT; j++) {
                 char c = b[i][j];
-
+    
                 switch (c) {
                     case '\n':
                     case '\r':
@@ -111,15 +111,15 @@ int main()
     lcd.initialize();
     lcd.enableCursor();
     
-    lcd.write("CODEX v"+versionString()+"\r");
+    lcd.write("CODEX v" CODEX_VERSION_STRING "\n");
 
     bool validDoc = false;
 
     if (FileSystem::init()) {
-        lcd.write("SD Card Detected!\r");
+        lcd.write("SD Card Detected!\n");
     }
     else {
-        lcd.write("No SD Card Detected!\r");
+        lcd.write("No SD Card Detected!\n");
     }
     
     lcd.write("Press enter to continue.");

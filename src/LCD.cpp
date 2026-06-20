@@ -134,9 +134,14 @@ void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
     col = col_;
     
     uint8_t curEnable = currentEnable();
+    uint8_t otherEnable = (curEnable == e1) ? e2 : e1;
 
     // set DDRAM address to move cursor to correct position
     sendByte(Command::SET_DDRAM_ADDRESS(row, col), false, curEnable);
+    
+    // just reset the other display to its 0,0. Otherwise weird stuff happens
+    sendByte(Command::SET_DDRAM_ADDRESS(0,0), false, otherEnable);
+
 
     if (cursorEnabled) {
         // this is pretty inefficient, but it works, and it only takes like
