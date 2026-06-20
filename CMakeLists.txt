@@ -29,8 +29,14 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(texteditor C CXX ASM)
+project(texteditor VERSION 0.1.0 LANGUAGES C CXX ASM)
 
+# Generate Version.hpp from template
+configure_file(
+    "${CMAKE_SOURCE_DIR}/Version.hpp.in"
+    "${CMAKE_BINARY_DIR}/generated/Version.hpp"
+    )
+    
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
@@ -41,12 +47,12 @@ add_subdirectory(lib/fatfs/FatFs_SPI ${CMAKE_BINARY_DIR}/fatfs)
 add_executable(texteditor 
     src/texteditor.cpp
     src/GapBuffer.cpp
-    src/LiquidCrystal.cpp
     src/hid.cpp
     src/Keyboard.cpp
     src/FileSystem.cpp
     src/Globals.cpp
-    src/hardware.c)
+    src/hardware.c
+    src/LCD.cpp)
 
 pico_set_program_name(texteditor "texteditor")
 pico_set_program_version(texteditor "0.1")
@@ -66,6 +72,7 @@ target_link_libraries(texteditor
 # Add the standard include files to the build
 target_include_directories(texteditor PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/include
+    ${CMAKE_BINARY_DIR}/generated
 )
 
 pico_add_extra_outputs(texteditor)

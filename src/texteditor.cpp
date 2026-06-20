@@ -10,6 +10,7 @@
 #include "Globals.hpp"
 #include "FileSystem.hpp"
 #include "Config.hpp"
+#include "Version.hpp"
 
 std::string selectedDocument = "";
 
@@ -110,7 +111,7 @@ int main()
 
     lcd.begin(40, 4);
     lcd.blink();
-    lcd.write("CODEX v"+versionString()+"\r");
+    lcd.write("CODEX v" CODEX_VERSION_STRING "\r");
 
     bool validDoc = false;
 
