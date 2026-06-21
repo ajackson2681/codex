@@ -59,7 +59,7 @@ void selectDocument()
             else {
                 lcd.write("  ");
             }
-            lcd.write(file + "\r");
+            lcd.write(file + "\n");
         });
     }
 }

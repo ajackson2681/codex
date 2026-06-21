@@ -51,7 +51,7 @@ namespace FileSystem
 
     void EnumerateFiles()
     {
-        if (fileList.size() > 0) {
+        if (fileList.size() > 1) {
             return;
         }
 
@@ -133,15 +133,13 @@ namespace FileSystem
 
     void SelectionDown() 
     {
-        // don't shift if we're already at the end of the list
-        // or if the list is smaller than the view windows
-        if (selectedIndex + 1 >= fileList.size() || 
-            fileListOffset + 3 >= fileList.size()) {
-            return;
-        }
-        
         selectedIndex++;
-        if (selectedIndex == 4) {
+        
+        // if we've reached the end of the list, don't go past it
+        if (selectedIndex == fileList.size()) {
+            selectedIndex--;
+        }
+        else if (selectedIndex == 4) {
             selectedIndex = 3;
             fileListOffset++;
             if (fileListOffset + 3 == fileList.size()) {
