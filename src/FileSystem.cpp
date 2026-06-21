@@ -215,7 +215,7 @@ namespace FileSystem
 
         std::string& selectedFile = GetSelectedFile();
         if (selectedFile == NEW_FILE_NAME) {
-            return; // maybe go to a "save as" flow in the future?
+            selectedFile = "new_document.txt";
         }
 
         SaveFile(selectedFile, buffer);
