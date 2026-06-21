@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GapBuffer.hpp"
-#include "LiquidCrystal.hpp"
+#include "LCD.hpp"
 
 enum State {
     STARTUP,
@@ -16,4 +16,4 @@ extern GapBuffer buffer;
 
 extern bool shouldSave;
 extern bool pressedEnter;
-extern LiquidCrystal lcd;
+extern LCD lcd;

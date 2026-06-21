@@ -2,7 +2,6 @@
 #include <functional>
 
 #include "pico/stdlib.h"
-#include "LiquidCrystal.hpp"
 #include "bsp/board_api.h"
 #include "tusb.h"
 
@@ -29,13 +28,13 @@ void initialize()
 
     writerState = State::WRITING;
 
-    lcd.blink();
+    lcd.enableCursor();
 }
 
 void selectDocument()
 {
 
-    lcd.noBlink();
+    lcd.disableCursor();
 
     if (!FileSystem::isMounted() || FileSystem::getFileList().size() == 0) {
         writerState = State::INITIALIZATION;
@@ -65,14 +64,14 @@ void selectDocument()
 void handleInput()
 {
     if (buffer.isStale()) {
-        gpio_put(PICO_DEFAULT_LED_PIN, false);
-        
         auto b = buffer.getVisibleFrame();
-        lcd.setCursor(0,0);
+        
+        lcd.setCursorPos(0,0);
+    
         for (int i = 0; i < ROW_COUNT; i++) {
             for (int j = 0; j < COL_COUNT; j++) {
                 char c = b[i][j];
-
+    
                 switch (c) {
                     case '\n':
                     case '\r':
@@ -89,7 +88,7 @@ void handleInput()
 
     int row,col;
     buffer.getCursorPos(row,col);
-    lcd.setCursor(col,row);
+    lcd.setCursorPos(row,col);
 
     if (shouldSave && selectedDocument != "") {
         FileSystem::saveFile(selectedDocument, buffer);
@@ -109,17 +108,18 @@ int main()
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
-    lcd.begin(40, 4);
-    lcd.blink();
-    lcd.write("CODEX v" CODEX_VERSION_STRING "\r");
+    lcd.initialize();
+    lcd.enableCursor();
+    
+    lcd.write("CODEX v" CODEX_VERSION_STRING "\n");
 
     bool validDoc = false;
 
     if (FileSystem::init()) {
-        lcd.write("SD Card Detected!\r");
+        lcd.write("SD Card Detected!\n");
     }
     else {
-        lcd.write("No SD Card Detected!\r");
+        lcd.write("No SD Card Detected!\n");
     }
     
     lcd.write("Press enter to continue.");
