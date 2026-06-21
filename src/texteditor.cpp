@@ -9,9 +9,8 @@
 #include "Globals.hpp"
 #include "FileSystem.hpp"
 #include "Config.hpp"
+#include "Keyboard.hpp"
 #include "Version.hpp"
-
-std::string selectedDocument = "";
 
 void tuh_mount_cb(uint8_t dev_addr) {}
 
@@ -20,11 +19,10 @@ void tuh_umount_cb(uint8_t dev_addr) {}
 void initialize()
 {
     lcd.clear();
+    // turn the blinking cursor back on
+    lcd.enableCursor();
     
-    if (FileSystem::isMounted()) {
-        selectedDocument = FileSystem::getFileList().at(FileSystem::getSelectionIndex());
-        FileSystem::loadFile(selectedDocument, buffer);
-    }
+    FileSystem::TryLoadFile();
 
     writerState = State::WRITING;
 
@@ -36,33 +34,38 @@ void selectDocument()
 
     lcd.disableCursor();
 
-    if (!FileSystem::isMounted() || FileSystem::getFileList().size() == 0) {
+    // skip to initialization if the file system isn't mounted
+    if (!FileSystem::Mounted()) {
+        writerState = State::INITIALIZATION;
+        return;
+    }
+
+    // loads any available file names. Only does this once, subsequent calls
+    // do nothing
+    FileSystem::EnumerateFiles();
+    
+    if (!FileSystem::HasFiles()) {
         writerState = State::INITIALIZATION;
         return;
     }
     
-    if (FileSystem::wasSelectionChanged()) {
+    if (FileSystem::SelectionChanged()) {    
         lcd.clear();
 
-        if (FileSystem::getFileList().size() > 0) {
-            auto selected = FileSystem::getSelectionIndex();
-            auto offset = FileSystem::getFileListOffset();
-            for (int i = 0; i < 4; i++) {
-                if (i == selected) {
-                    lcd.write("> ");
-                }
-                else {
-                    lcd.write("  ");
-                }
-    
-                lcd.write(FileSystem::getFileList().at(i + offset)+'\r');
+        FileSystem::ForEachVisibleFile([](const std::string& file, int index) {
+            if (index == FileSystem::GetSelectedIndex()) {
+                lcd.write("> ");
+            } 
+            else {
+                lcd.write("  ");
             }
-        }
+            lcd.write(file + "\n");
+        });
     }
 }
 
-void handleInput()
-{
+void renderScreen()
+{    
     if (buffer.isStale()) {
         auto b = buffer.getVisibleFrame();
         
@@ -90,46 +93,50 @@ void handleInput()
     buffer.getCursorPos(row,col);
     lcd.setCursorPos(row,col);
 
-    if (shouldSave && selectedDocument != "") {
-        FileSystem::saveFile(selectedDocument, buffer);
+    if (shouldSave) {
+        FileSystem::TrySaveFile();
         shouldSave = false;
-        gpio_put(PICO_DEFAULT_LED_PIN, true);
     }
+}
+
+void setup()
+{
+    stdio_init_all();
+
+    // init host stack on configured roothub port
+    tuh_init(BOARD_TUH_RHPORT);
+    
+    if (board_init_after_tusb) {
+        board_init_after_tusb();
+    }
+
+    gpio_init(CD_PIN);
+    gpio_set_dir(CD_PIN, GPIO_IN);
+    gpio_pull_up(CD_PIN);
 }
 
 int main()
 {
-    stdio_init_all();
-    // init host stack on configured roothub port
-    tuh_init(BOARD_TUH_RHPORT);
-    if (board_init_after_tusb) {
-        board_init_after_tusb();
-    }
-    gpio_init(PICO_DEFAULT_LED_PIN);
-    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    setup();
 
     lcd.initialize();
     lcd.enableCursor();
     
     lcd.write("CODEX v" CODEX_VERSION_STRING "\n");
 
-    bool validDoc = false;
 
-    if (FileSystem::init()) {
+    if (FileSystem::Init()) {
         lcd.write("SD Card Detected!\n");
     }
     else {
-        lcd.write("No SD Card Detected!\n");
+        lcd.write("No SD Card Detected. Can't save files.\r");
     }
     
     lcd.write("Press enter to continue.");
 
-    gpio_put(PICO_DEFAULT_LED_PIN, true);
-
-    bool doOnce = false;
-    
     while (true) {
         tuh_task();
+        FileSystem::Check();
 
         switch (writerState) {
             case State::STARTUP:
@@ -143,12 +150,12 @@ int main()
                 initialize();
                 break;
             case State::WRITING:
-                handleInput();
+                renderScreen();
                 break;
             default:
                 break;
         }
     } 
 
-    FileSystem::uninit();
+    FileSystem::Uninit();
 }

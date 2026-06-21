@@ -4,12 +4,12 @@
 #include <string>
 #include <cstdint>
 
+#include "Config.hpp"
+
 #define DEFAULT_BUF_SIZE 32
 
 #define SHOW_GAP false
 
-#define COL_COUNT 40
-#define ROW_COUNT 4
 #define FRAME_SIZE (COL_COUNT * ROW_COUNT)
 
 class GapBuffer {
@@ -49,7 +49,6 @@ private:
     void clamp();
     
 public:
-    // GapBuffer(LiquidCrystal& _lcd, int initialSize = DEFAULT_BUF_SIZE);
     GapBuffer(int initialSize = DEFAULT_BUF_SIZE);
     ~GapBuffer();
 
@@ -60,6 +59,7 @@ public:
      * @param c Character to insert
      */
     void insert(char c);
+    
     /**
      * @brief insert a string at the current cursor postion. This will resize
      * the buffer if necessary.
@@ -68,10 +68,14 @@ public:
      */
     void insert(const std::string& str);
 
+    void insertNewlineAbove();
+    void insertNewlineBelow();
+    
     /**
      * @brief Moves the cursor left by one character
      */
     void moveLeft();
+    
     /**
      * @brief Moves the cursor right by one character
      */
@@ -82,6 +86,7 @@ public:
      * defined as a space-separated value
      */
     void moveWordLeft();
+
     /**
      * @brief Moves the cursor right by one word. A "word" in this case is
      * defined as a space-separated value
@@ -115,6 +120,7 @@ public:
      * 
      */
     void moveUpOneLine();
+
     /**
      * @brief Moves the cursor down by one line relative to the frame buffer.
      * 

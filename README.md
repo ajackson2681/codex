@@ -20,9 +20,9 @@ Codex is under active development. Current state:
 - [x] File selection on boot
 - [x] Tab handling (inserted as two spaces)
 - [x] Home/End at line, frame, and document scope
+- [x] Card detect
 
 **In progress / planned:**
-- [ ] Card detect
 - [ ] Keyboard shortcut finalization
 - [ ] Save new document/give file name
 - [ ] PWM backlight brightness control (potentiometer on one of the analog pins + transistor)

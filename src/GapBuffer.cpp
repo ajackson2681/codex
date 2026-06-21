@@ -36,6 +36,19 @@ void GapBuffer::insert(const std::string& str)
     }
 }
 
+void GapBuffer::insertNewlineAbove()
+{
+    moveToLineStart();
+    insert('\n');
+    moveUpOneLine();
+}
+
+void GapBuffer::insertNewlineBelow()
+{
+    moveToLineEnd();
+    insert('\n');
+}   
+
 int GapBuffer::findPrevLineStart(int from)
 {
     if (from == 0) {
