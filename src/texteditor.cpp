@@ -20,7 +20,7 @@ void initialize()
 {
     lcd.clear();
     // turn the blinking cursor back on
-    lcd.blink();
+    lcd.enableCursor();
     
     FileSystem::TryLoadFile();
 
@@ -125,7 +125,7 @@ int main()
     lcd.write("CODEX v" CODEX_VERSION_STRING "\n");
 
 
-    if (FileSystem::init()) {
+    if (FileSystem::Init()) {
         lcd.write("SD Card Detected!\n");
     }
     else {
