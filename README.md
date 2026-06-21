@@ -64,8 +64,8 @@ Codex is under active development. Current state:
 |---|---|---|
 | **Breadboard** | Initial validation: LCD, USB host, SD card | Done | 
 | **Rev 0** | First PCB, puts the breadboard on a dedicated PCB, adds a power switch, adds filtering capacitors | Done |
-| **Rev 1** | Fixes mistakes from Rev0. Sill uses socketed footprints for SD card and Pico. Adds breakout pins for contrast/brightness potentiometers, adds PWM backlight transistor. | Board Designed |
-| **Rev 2** | Dedicated SD card slot, finalized sockets for IDC, potentiometers, and LED power. Pico footprint will allow sockets _or_ solder directly via castellated holes. 5v linear regulator will remain, with an optional switch for swapping to using a 5v direct power source (planned as a Powerboost 1000 module). | Planned |
+| **Rev 1** | Fixes mistakes from Rev0. Sill uses socketed footprints for SD card and Pico. Adds breakout pins for contrast/brightness potentiometers, adds PWM backlight transistor. | Validating |
+| **Rev 2** | Dedicated SD card slot, finalized sockets for IDC, potentiometers, and LED power. Pico footprint will allow sockets _or_ solder directly via castellated holes. 5v linear regulator will remain, with an optional switch for swapping to using a 5v direct power source (planned as a Powerboost 1000 module). | Designing |
 | **Rev 3** | Removal of 5v linear regulator. Move to all SMD components for assembly by fab house. | Planned |
 | **???** | Anything beyond Rev3 will only happen if I make dumb mistakes (and I probably will).
 
