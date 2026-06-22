@@ -188,16 +188,19 @@ uint8_t LCD::getCursorRow() {
 
 void LCD::write(char c)
 {
+    int lRow = row;
+    int lCol = col;
+
     if (c != '\n') {
         sendByte(c, true, currentEnable());
     }
     else {
-        if (++row >= ROW_COUNT) {
-            row = 0;
+        if (++lRow >= ROW_COUNT) {
+            lRow = 0;
         }
-        col = 0;
+        lCol = 0;
         
-        setCursorPos(row,col);
+        setCursorPos(lRow,lCol);
     }
 }
 
