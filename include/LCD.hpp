@@ -130,8 +130,12 @@ public:
 
 private:
 
+    // local reference to the row and column of the cursor. Used for determining
+    // which enable pin we care about
     uint8_t row;
     uint8_t col;
+
+    // relevant pins
     uint8_t rs;
     uint8_t e1;
     uint8_t e2;
@@ -201,4 +205,25 @@ private:
      * display, it wraps around to the beginning of the first line.
      */
     void incrementCursor();
+
+    /**
+     * @brief Clamps the cursor position to valid range (row 0 to 3, col 0 to 39)
+     * 
+     * @param row_ 
+     * @param col_ 
+     */
+    void clampCursorPos(uint8_t& row_, uint8_t& col_);
+
+    /**
+     * @brief Compares the current row and the desired row and determines if we
+     * would be switching chips. This is useful to not perform wasteful operations
+     * on stuff like the cursor if we don't need to
+     * 
+     * @param curRow_ current row that the cursor is on
+     * @param newRow_ row we wish to set the cursor to
+     * 
+     * @return true if the chips would switch
+     * @return false otherwise
+     */
+    bool chipsAreSwitching(uint8_t curRow_, uint8_t newRow_);
 };
