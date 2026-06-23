@@ -129,7 +129,7 @@ int main()
         lcd.write("SD Card Detected!\n");
     }
     else {
-        lcd.write("No SD Card Detected. Can't save files.\r");
+        lcd.write("No SD Card Detected. Can't save files.\n");
     }
     
     lcd.write("Press enter to continue.");
