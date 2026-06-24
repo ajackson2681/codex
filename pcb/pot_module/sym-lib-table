@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "PTA4543-2010CPB103") (type "KiCad") (uri "${KIPRJMOD}/PTA4543_2010CPB103/PTA4543-2010CPB103.kicad_sym") (options "") (descr ""))
+)
