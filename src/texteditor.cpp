@@ -11,6 +11,7 @@
 #include "Config.hpp"
 #include "Keyboard.hpp"
 #include "Version.hpp"
+#include "SystemState.hpp"
 
 void tuh_mount_cb(uint8_t dev_addr) {}
 
@@ -19,24 +20,21 @@ void tuh_umount_cb(uint8_t dev_addr) {}
 void initialize()
 {
     lcd.clear();
-    // turn the blinking cursor back on
-    lcd.enableCursor();
     
     FileSystem::TryLoadFile();
 
-    writerState = State::WRITING;
+    SystemState::set(State::WRITING);
 
     lcd.enableCursor();
 }
 
 void selectDocument()
 {
-
     lcd.disableCursor();
 
     // skip to initialization if the file system isn't mounted
     if (!FileSystem::Mounted()) {
-        writerState = State::INITIALIZATION;
+        SystemState::set(State::INITIALIZATION);
         return;
     }
 
@@ -45,7 +43,7 @@ void selectDocument()
     FileSystem::EnumerateFiles();
     
     if (!FileSystem::HasFiles()) {
-        writerState = State::INITIALIZATION;
+        SystemState::set(State::INITIALIZATION);
         return;
     }
     
@@ -92,11 +90,6 @@ void renderScreen()
     int row,col;
     buffer.getCursorPos(row,col);
     lcd.setCursorPos(row,col);
-
-    if (shouldSave) {
-        FileSystem::TrySaveFile();
-        shouldSave = false;
-    }
 }
 
 void setup()
@@ -121,9 +114,7 @@ int main()
 
     lcd.initialize();
     lcd.enableCursor();
-    
     lcd.write("CODEX v" CODEX_VERSION_STRING "\n");
-
 
     if (FileSystem::Init()) {
         lcd.write("SD Card Detected!\n");
@@ -138,7 +129,7 @@ int main()
         tuh_task();
         FileSystem::Check();
 
-        switch (writerState) {
+        switch (SystemState::get()) {
             case State::STARTUP:
                 // don't do anything during startup. Just read input and wait
                 // for an enter key press
@@ -156,6 +147,4 @@ int main()
                 break;
         }
     } 
-
-    FileSystem::Uninit();
 }

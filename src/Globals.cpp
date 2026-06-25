@@ -3,10 +3,6 @@
 
 GapBuffer buffer;
 
-bool shouldSave = false;
-
-State writerState = State::STARTUP;
-
 LCD lcd(
     RS_PIN,            // RS
     E1_PIN,            // EN1 (chip 1, rows 0-1)

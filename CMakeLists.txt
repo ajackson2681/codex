@@ -29,7 +29,7 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(texteditor VERSION 0.3.2 LANGUAGES C CXX ASM)
+project(texteditor VERSION 0.4.0 LANGUAGES C CXX ASM)
 
 # Generate Version.hpp from template
 configure_file(
@@ -52,7 +52,8 @@ add_executable(texteditor
     src/FileSystem.cpp
     src/Globals.cpp
     src/hardware.c
-    src/LCD.cpp)
+    src/LCD.cpp
+    src/SystemState.cpp)
 
 pico_set_program_name(texteditor "texteditor")
 pico_set_program_version(texteditor "0.1")
