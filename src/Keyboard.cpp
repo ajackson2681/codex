@@ -1,6 +1,7 @@
 #include "Keyboard.hpp"
 #include "Globals.hpp"
 #include "FileSystem.hpp"
+#include "SystemState.hpp"
 
 namespace Keyboard
 {
@@ -14,7 +15,7 @@ namespace Keyboard
     void StartupStateHandler(uint8_t keycode)
     {
         if (keycode == HID_KEY_ENTER) {
-            writerState = State::DOCUMENT_SELECTION;
+            SystemState::set(State::DOCUMENT_SELECTION);
         }
     }
 
@@ -28,7 +29,7 @@ namespace Keyboard
                 FileSystem::SelectionDown();
                 break;
             case HID_KEY_ENTER:
-                writerState = State::INITIALIZATION;
+                SystemState::set(State::INITIALIZATION);
                 break;
         }
     }
@@ -136,7 +137,7 @@ namespace Keyboard
         if (ctrl) {
             switch(keycode) {
                 case HID_KEY_S:
-                    shouldSave = true;
+                    FileSystem::TrySaveFile();
                     break;
             }
         }
@@ -147,7 +148,7 @@ namespace Keyboard
 
     void ProcessInput(uint8_t keycode, bool shift, bool ctrl, bool alt)
     {
-        switch (writerState) {
+        switch (SystemState::get()) {
             case State::STARTUP:
                 StartupStateHandler(keycode);
                 break;
