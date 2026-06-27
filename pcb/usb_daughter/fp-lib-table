@@ -1,0 +1,4 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "USB_A1VSB6") (type "KiCad") (uri "${KIPRJMOD}/USB_A1VSB6") (options "") (descr ""))
+)

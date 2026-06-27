@@ -17,7 +17,5 @@ pcb/**/*-backups/
 *.lck
 *.bak
 *.FCBak
-*.step
 *.stl
-*.STEP
 .history/
