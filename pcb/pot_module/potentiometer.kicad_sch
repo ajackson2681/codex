@@ -755,7 +755,7 @@
 		)
 		(uuid "f74fe7e9-782b-406a-a0f7-327a19d47ae0")
 	)
-	(global_label "Plane"
+	(global_label "Plane1"
 		(shape input)
 		(at 143.51 90.17 0)
 		(fields_autoplaced yes)
@@ -767,7 +767,7 @@
 		)
 		(uuid "01958724-ca1f-4b74-8eaf-d8cddd3851ee")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 151.817 90.17 0)
+			(at 153.0265 90.17 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -776,6 +776,30 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
+			)
+		)
+	)
+	(global_label "Plane2"
+		(shape input)
+		(at 123.19 90.17 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "b241717d-5feb-4eda-b777-3b4c35396569")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 113.6735 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
 			)
 		)
 	)
