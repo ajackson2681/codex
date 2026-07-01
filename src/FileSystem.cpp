@@ -19,6 +19,7 @@ namespace FileSystem
     
     std::vector<std::string> fileList = {};
 
+    std::string newFileName;
     
     bool Init()
     {
@@ -109,7 +110,12 @@ namespace FileSystem
 
     std::string& GetSelectedFile()
     {
-        return fileList.at(fileListOffset+selectedIndex);
+        if (newFileName.empty()) {
+            return fileList.at(fileListOffset+selectedIndex);
+        }
+        else {
+            return newFileName;
+        }
     }
 
     int GetSelectedIndex()
@@ -218,7 +224,7 @@ namespace FileSystem
             selectedFile = "new_document.txt";
         }
 
-        SaveFile(selectedFile, buffer);
+        SaveFile(selectedFile, writerBuffer);
     }
 
     void TryLoadFile()
@@ -232,7 +238,7 @@ namespace FileSystem
             return;
         }
 
-        LoadFile(selectedFile, buffer);
+        LoadFile(selectedFile, writerBuffer);
     }
 
     void Uninit()
@@ -242,6 +248,11 @@ namespace FileSystem
         fileList.clear();
         selectedIndex = 0;
         fileListOffset = 0;
+    }
+
+    void SetNewFileName(const std::string& name)
+    {
+        newFileName = name;
     }
 
 };

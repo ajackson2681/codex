@@ -43,7 +43,7 @@ void selectDocument()
     FileSystem::EnumerateFiles();
     
     if (!FileSystem::HasFiles()) {
-        SystemState::set(State::INITIALIZATION);
+        SystemState::set(State::SET_DOC_NAME);
         return;
     }
     
@@ -62,10 +62,44 @@ void selectDocument()
     }
 }
 
+void setDocumentName()
+{
+    if (scratchBuffer.isStale()) {
+        lcd.enableCursor();
+        lcd.clear();
+        lcd.write("Document Name:\n");
+        auto b = scratchBuffer.getVisibleFrame();
+        
+        lcd.setCursorPos(1,0);
+    
+        for (int i = 0; i < ROW_COUNT - 1; i++) { // only will have 3 lines available for this
+            for (int j = 0; j < COL_COUNT; j++) {
+                char c = b[i][j];
+    
+                switch (c) {
+                    case '\n':
+                    case '\r':
+                    case '\0':
+                        lcd.write(' ');
+                        break;
+                    default:
+                        lcd.write(c);
+                        break;
+                }
+            }
+        }
+    }
+
+    int row,col;
+    scratchBuffer.getCursorPos(row,col);
+    // the cursor is on the second row, so we need to add 1 to the row value
+    lcd.setCursorPos(row+1,col);
+}
+
 void renderScreen()
 {    
-    if (buffer.isStale()) {
-        auto b = buffer.getVisibleFrame();
+    if (writerBuffer.isStale()) {
+        auto b = writerBuffer.getVisibleFrame();
         
         lcd.setCursorPos(0,0);
     
@@ -88,7 +122,7 @@ void renderScreen()
     }
 
     int row,col;
-    buffer.getCursorPos(row,col);
+    writerBuffer.getCursorPos(row,col);
     lcd.setCursorPos(row,col);
 }
 
@@ -136,6 +170,9 @@ int main()
                 break;
             case State::DOCUMENT_SELECTION: 
                 selectDocument();
+                break;
+            case State::SET_DOC_NAME:
+                setDocumentName();
                 break;
             case State::INITIALIZATION:
                 initialize();

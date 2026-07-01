@@ -525,6 +525,18 @@ int GapBuffer::totalChars()
     return gapStart + (buffer.size() - gapEnd);
 }
 
+void GapBuffer::clearBuffer()
+{
+    buffer.clear();
+    buffer.resize(DEFAULT_BUF_SIZE, '\0');
+    gapStart = 0;
+    gapEnd = buffer.size();
+    viewFrameStart = 0;
+    cursorRow = 0;
+    cursorCol = 0;
+    stale = true;
+}
+
 GapBuffer::~GapBuffer() 
 {
 

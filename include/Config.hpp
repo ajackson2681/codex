@@ -36,3 +36,4 @@
 
 #define COL_COUNT 40
 #define ROW_COUNT 4
+#define MAX_FILE_NAME_LENGTH 120

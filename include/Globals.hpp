@@ -5,6 +5,7 @@
 
 #define NEW_FILE_NAME "New File"
 
-extern GapBuffer buffer;
+extern GapBuffer writerBuffer;
+extern GapBuffer scratchBuffer;
 
 extern LCD lcd;
