@@ -1,18 +1,29 @@
 #include "SystemState.hpp"
+#include "Globals.hpp"
 
 namespace SystemState 
 {
-    static State state = State::STARTUP;
+    static State currentState = State::STARTUP;
     
     State get() 
     {
-        return state;
+        return currentState;
     }
 
     void set(State newState) 
     {
-        // could do validation / conditional logic to handle transitions between 
-        // states, but for now just set the state
-        state = newState;
+        switch (currentState) {
+            case State::STARTUP:
+                lcd.disableCursor();
+                break;
+            case State::DOCUMENT_SELECTION:
+                lcd.enableCursor();
+                lcd.clear();
+                break;
+            default:
+                break;
+        }
+
+        currentState = newState;
     }
 };

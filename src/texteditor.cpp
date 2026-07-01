@@ -30,8 +30,6 @@ void initialize()
 
 void selectDocument()
 {
-    lcd.disableCursor();
-
     // skip to initialization if the file system isn't mounted
     if (!FileSystem::Mounted()) {
         SystemState::set(State::INITIALIZATION);
@@ -65,8 +63,6 @@ void selectDocument()
 void setDocumentName()
 {
     if (scratchBuffer.isStale()) {
-        lcd.enableCursor();
-        lcd.clear();
         lcd.write("Document Name:\n");
         auto b = scratchBuffer.getVisibleFrame();
         
