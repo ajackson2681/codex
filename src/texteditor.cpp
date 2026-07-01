@@ -19,13 +19,8 @@ void tuh_umount_cb(uint8_t dev_addr) {}
 
 void initialize()
 {
-    lcd.clear();
-    
     FileSystem::TryLoadFile();
-
     SystemState::set(State::WRITING);
-
-    lcd.enableCursor();
 }
 
 void selectDocument()
