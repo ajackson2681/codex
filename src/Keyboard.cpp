@@ -13,10 +13,19 @@ namespace Keyboard
     void WritingStateHandler(uint8_t keycode, bool shift, bool ctrl);
     void HandleAscii(uint8_t keycode, bool shift, bool ctrl, GapBuffer& buffer);
 
-    void StartupStateHandler(uint8_t keycode)
+    void StartupCardDetectedStateHandler(uint8_t keycode)
     {
         if (keycode == HID_KEY_ENTER) {
             SystemState::set(State::DOCUMENT_SELECTION);
+        }
+    }
+
+    void StartupNoCardDetectedStateHandler(uint8_t keycode)
+    {
+        if (keycode == HID_KEY_ENTER) {
+            // should this go straight to initialization? maybe. 
+            // No point in setting a doc name since we can't save
+            SystemState::set(State::INITIALIZATION); 
         }
     }
 
@@ -208,8 +217,11 @@ namespace Keyboard
     void ProcessInput(uint8_t keycode, bool shift, bool ctrl, bool alt)
     {
         switch (SystemState::get()) {
-            case State::STARTUP:
-                StartupStateHandler(keycode);
+            case State::STARTUP_CARD_DETECTED:
+                StartupCardDetectedStateHandler(keycode);
+                break;
+            case State::STARTUP_NO_CARD_DETECTED:
+                StartupNoCardDetectedStateHandler(keycode);
                 break;
             case State::DOCUMENT_SELECTION:
                 DocSelectStateHandler(keycode);

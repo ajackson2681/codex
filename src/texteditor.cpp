@@ -139,16 +139,6 @@ int main()
 
     lcd.initialize();
     lcd.enableCursor();
-    lcd.write("CODEX v" CODEX_VERSION_STRING "\n");
-
-    if (FileSystem::Init()) {
-        lcd.write("SD Card Detected!\n");
-    }
-    else {
-        lcd.write("No SD Card Detected. Can't save files.\n");
-    }
-    
-    lcd.write("Press enter to continue.");
 
     while (true) {
         tuh_task();
@@ -156,8 +146,22 @@ int main()
 
         switch (SystemState::get()) {
             case State::STARTUP:
-                // don't do anything during startup. Just read input and wait
-                // for an enter key press
+                if (FileSystem::Mounted()) {
+                    SystemState::set(State::STARTUP_CARD_DETECTED);
+                }
+                else {
+                    SystemState::set(State::STARTUP_NO_CARD_DETECTED);
+                }
+                break;
+            case State::STARTUP_CARD_DETECTED:
+                if (!FileSystem::Mounted()) {
+                    SystemState::set(State::STARTUP_NO_CARD_DETECTED);
+                }
+                break;
+            case State::STARTUP_NO_CARD_DETECTED:
+                if (FileSystem::Mounted()) {
+                    SystemState::set(State::STARTUP_CARD_DETECTED);
+                }
                 break;
             case State::DOCUMENT_SELECTION: 
                 selectDocument();
