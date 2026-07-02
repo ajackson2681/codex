@@ -9,13 +9,75 @@ namespace Keyboard
 
     void StartupStateHandler(uint8_t keycode);
     void DocSelectStateHandler(uint8_t keycode);
+    void DocNameStateHandler(uint8_t keycode, bool shift);
     void WritingStateHandler(uint8_t keycode, bool shift, bool ctrl);
-    void HandleAscii(uint8_t keycode, bool shift, bool ctrl);
+    void HandleAscii(uint8_t keycode, bool shift, bool ctrl, GapBuffer& buffer);
 
-    void StartupStateHandler(uint8_t keycode)
+    void StartupCardDetectedStateHandler(uint8_t keycode)
     {
         if (keycode == HID_KEY_ENTER) {
             SystemState::set(State::DOCUMENT_SELECTION);
+        }
+    }
+
+    void StartupNoCardDetectedStateHandler(uint8_t keycode)
+    {
+        if (keycode == HID_KEY_ENTER) {
+            // should this go straight to initialization? maybe. 
+            // No point in setting a doc name since we can't save
+            SystemState::set(State::INITIALIZATION); 
+        }
+    }
+
+    void DocNameStateHandler(uint8_t keycode, bool shift)
+    {
+        switch (keycode) {
+            case HID_KEY_ARROW_UP:
+                scratchBuffer.moveUpOneLine();
+                break;
+
+            case HID_KEY_ARROW_DOWN:
+                scratchBuffer.moveDownOneLine();
+                break;
+
+            case HID_KEY_ARROW_LEFT:  
+                scratchBuffer.moveLeft();        
+                break;
+            
+            case HID_KEY_ARROW_RIGHT:
+                scratchBuffer.moveRight();     
+                break;
+            
+            case HID_KEY_BACKSPACE:   
+                scratchBuffer.backSpace();       
+                break;
+            
+            case HID_KEY_DELETE:      
+                scratchBuffer.deleteChar();       
+                break;
+            
+            case HID_KEY_ENTER:  {
+                std::string fileName;
+                
+                for (int i = 0; i < scratchBuffer.totalChars(); i++) {
+                    fileName += scratchBuffer.getCharAt(i);
+                }
+
+                FileSystem::SetNewFileName(fileName);
+
+                scratchBuffer.clearBuffer();
+                
+                SystemState::set(State::INITIALIZATION);
+                break;
+            }
+
+            default:
+                if (scratchBuffer.totalChars() >= MAX_FILE_NAME_LENGTH) {
+                    return; // don't allow more input if we're at the max buffer size
+                }
+
+                HandleAscii(keycode, shift, false, scratchBuffer);
+                break;
         }
     }
 
@@ -29,7 +91,13 @@ namespace Keyboard
                 FileSystem::SelectionDown();
                 break;
             case HID_KEY_ENTER:
-                SystemState::set(State::INITIALIZATION);
+                if (FileSystem::GetSelectedFile() == NEW_FILE_NAME) {
+                    SystemState::set(State::SET_DOC_NAME);
+                    scratchBuffer.invalidate();
+                }
+                else {
+                    SystemState::set(State::INITIALIZATION);
+                }
                 break;
         }
     }
@@ -40,97 +108,97 @@ namespace Keyboard
         switch (keycode) {
             case HID_KEY_ARROW_LEFT:  
                 if (ctrl) {
-                    buffer.moveWordLeft();
+                    writerBuffer.moveWordLeft();
                 }
                 else {
-                    buffer.moveLeft();        
+                    writerBuffer.moveLeft();        
                 }
                 break;
             
             case HID_KEY_ARROW_RIGHT:
                 if (ctrl) {
-                    buffer.moveWordRight();
+                    writerBuffer.moveWordRight();
                 }
                 else {
-                    buffer.moveRight();       
+                    writerBuffer.moveRight();       
                 }
                 break;
             
             case HID_KEY_ARROW_UP:  
                 if (ctrl) {
-                    buffer.moveToFrameStart();
+                    writerBuffer.moveToFrameStart();
                 }
                 else {
-                    buffer.moveUpOneLine();   
+                    writerBuffer.moveUpOneLine();   
                 }
                 break;
             
             case HID_KEY_ARROW_DOWN:  
                 if (ctrl) {
-                    buffer.moveToFrameEnd();
+                    writerBuffer.moveToFrameEnd();
                 }
                 else {
-                    buffer.moveDownOneLine(); 
+                    writerBuffer.moveDownOneLine(); 
                 }
                 break;
             
             case HID_KEY_BACKSPACE:   
                 if (ctrl) {
-                    buffer.backSpaceWord();
+                    writerBuffer.backSpaceWord();
                 }
                 else {
-                    buffer.backSpace();       
+                    writerBuffer.backSpace();       
                 }
                 break;
             
             case HID_KEY_DELETE:      
                 if (ctrl) {
-                    buffer.deleteWord();
+                    writerBuffer.deleteWord();
                 }
                 else {
-                    buffer.deleteChar();       
+                    writerBuffer.deleteChar();       
                 }
                 break;
             
             case HID_KEY_HOME:
                 if (ctrl) {
-                    buffer.moveToStart();
+                    writerBuffer.moveToStart();
                 }
                 else {
-                    buffer.moveToLineStart();
+                    writerBuffer.moveToLineStart();
                 }
                 break;
             
             case HID_KEY_END:         
                 if (ctrl) {
-                    buffer.moveToEnd(); 
+                    writerBuffer.moveToEnd(); 
                 }
                 else {
-                    buffer.moveToLineEnd();
+                    writerBuffer.moveToLineEnd();
                 }
                 break;
             
             case HID_KEY_ENTER:       
                 if (ctrl && shift) {
-                    buffer.insertNewlineAbove();
+                    writerBuffer.insertNewlineAbove();
                 }
                 else if (ctrl) {
-                    buffer.insertNewlineBelow();
+                    writerBuffer.insertNewlineBelow();
                 }
                 else {
-                    buffer.insert('\n');      
+                    writerBuffer.insert('\n');      
                 }
                 break;
             case HID_KEY_TAB:
-                buffer.insert("  "); // insert two spaces instead of a tab
+                writerBuffer.insert("  "); // insert two spaces instead of a tab
                 break;
                 
             default:
-                HandleAscii(keycode, shift, ctrl);
+                HandleAscii(keycode, shift, ctrl, writerBuffer);
         }
     }
 
-    void HandleAscii(uint8_t keycode, bool shift, bool ctrl)
+    void HandleAscii(uint8_t keycode, bool shift, bool ctrl, GapBuffer& buffer)
     {
         uint8_t ascii = keycode2ascii[keycode][shift ? 1 : 0];
 
@@ -149,11 +217,17 @@ namespace Keyboard
     void ProcessInput(uint8_t keycode, bool shift, bool ctrl, bool alt)
     {
         switch (SystemState::get()) {
-            case State::STARTUP:
-                StartupStateHandler(keycode);
+            case State::STARTUP_CARD_DETECTED:
+                StartupCardDetectedStateHandler(keycode);
+                break;
+            case State::STARTUP_NO_CARD_DETECTED:
+                StartupNoCardDetectedStateHandler(keycode);
                 break;
             case State::DOCUMENT_SELECTION:
                 DocSelectStateHandler(keycode);
+                break;
+            case State::SET_DOC_NAME:
+                DocNameStateHandler(keycode, shift);
                 break;
             case State::WRITING:
                 WritingStateHandler(keycode, shift, ctrl);

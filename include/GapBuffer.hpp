@@ -150,4 +150,6 @@ public:
     void invalidate();
     bool isStale();
     int totalChars();
+
+    void clearBuffer();
 };

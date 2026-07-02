@@ -1,7 +1,8 @@
 #include "Globals.hpp"
 #include "Config.hpp"
 
-GapBuffer buffer;
+GapBuffer writerBuffer;
+GapBuffer scratchBuffer;
 
 LCD lcd(
     RS_PIN,            // RS

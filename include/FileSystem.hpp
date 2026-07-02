@@ -84,4 +84,6 @@ namespace FileSystem
     void TryLoadFile();
     
     void Uninit();
+
+    void SetNewFileName(const std::string& name);
 };

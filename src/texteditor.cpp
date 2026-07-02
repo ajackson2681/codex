@@ -19,19 +19,12 @@ void tuh_umount_cb(uint8_t dev_addr) {}
 
 void initialize()
 {
-    lcd.clear();
-    
     FileSystem::TryLoadFile();
-
     SystemState::set(State::WRITING);
-
-    lcd.enableCursor();
 }
 
 void selectDocument()
 {
-    lcd.disableCursor();
-
     // skip to initialization if the file system isn't mounted
     if (!FileSystem::Mounted()) {
         SystemState::set(State::INITIALIZATION);
@@ -43,7 +36,7 @@ void selectDocument()
     FileSystem::EnumerateFiles();
     
     if (!FileSystem::HasFiles()) {
-        SystemState::set(State::INITIALIZATION);
+        SystemState::set(State::SET_DOC_NAME);
         return;
     }
     
@@ -62,10 +55,42 @@ void selectDocument()
     }
 }
 
+void setDocumentName()
+{
+    if (scratchBuffer.isStale()) {
+        lcd.write("Document Name:\n");
+        auto b = scratchBuffer.getVisibleFrame();
+        
+        lcd.setCursorPos(1,0);
+    
+        for (int i = 0; i < ROW_COUNT - 1; i++) { // only will have 3 lines available for this
+            for (int j = 0; j < COL_COUNT; j++) {
+                char c = b[i][j];
+    
+                switch (c) {
+                    case '\n':
+                    case '\r':
+                    case '\0':
+                        lcd.write(' ');
+                        break;
+                    default:
+                        lcd.write(c);
+                        break;
+                }
+            }
+        }
+    }
+
+    int row,col;
+    scratchBuffer.getCursorPos(row,col);
+    // the cursor is on the second row, so we need to add 1 to the row value
+    lcd.setCursorPos(row+1,col);
+}
+
 void renderScreen()
 {    
-    if (buffer.isStale()) {
-        auto b = buffer.getVisibleFrame();
+    if (writerBuffer.isStale()) {
+        auto b = writerBuffer.getVisibleFrame();
         
         lcd.setCursorPos(0,0);
     
@@ -88,7 +113,7 @@ void renderScreen()
     }
 
     int row,col;
-    buffer.getCursorPos(row,col);
+    writerBuffer.getCursorPos(row,col);
     lcd.setCursorPos(row,col);
 }
 
@@ -114,16 +139,6 @@ int main()
 
     lcd.initialize();
     lcd.enableCursor();
-    lcd.write("CODEX v" CODEX_VERSION_STRING "\n");
-
-    if (FileSystem::Init()) {
-        lcd.write("SD Card Detected!\n");
-    }
-    else {
-        lcd.write("No SD Card Detected. Can't save files.\n");
-    }
-    
-    lcd.write("Press enter to continue.");
 
     while (true) {
         tuh_task();
@@ -131,11 +146,28 @@ int main()
 
         switch (SystemState::get()) {
             case State::STARTUP:
-                // don't do anything during startup. Just read input and wait
-                // for an enter key press
+                if (FileSystem::Mounted()) {
+                    SystemState::set(State::STARTUP_CARD_DETECTED);
+                }
+                else {
+                    SystemState::set(State::STARTUP_NO_CARD_DETECTED);
+                }
+                break;
+            case State::STARTUP_CARD_DETECTED:
+                if (!FileSystem::Mounted()) {
+                    SystemState::set(State::STARTUP_NO_CARD_DETECTED);
+                }
+                break;
+            case State::STARTUP_NO_CARD_DETECTED:
+                if (FileSystem::Mounted()) {
+                    SystemState::set(State::STARTUP_CARD_DETECTED);
+                }
                 break;
             case State::DOCUMENT_SELECTION: 
                 selectDocument();
+                break;
+            case State::SET_DOC_NAME:
+                setDocumentName();
                 break;
             case State::INITIALIZATION:
                 initialize();
