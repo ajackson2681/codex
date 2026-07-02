@@ -4,6 +4,7 @@
 #include "pico/stdlib.h"
 #include "bsp/board_api.h"
 #include "tusb.h"
+#include "hardware/pwm.h"
 
 #include "GapBuffer.hpp"
 #include "Globals.hpp"
@@ -131,10 +132,31 @@ void setup()
     gpio_init(CD_PIN);
     gpio_set_dir(CD_PIN, GPIO_IN);
     gpio_pull_up(CD_PIN);
+
+    gpio_init(PWM_CON_PIN);
+    gpio_set_dir(PWM_CON_PIN, GPIO_OUT);
+    gpio_put(PWM_CON_PIN, true);
+
+    gpio_set_function(PWM_CON_PIN, GPIO_FUNC_PWM);
+    gpio_set_function(PWM_BRI_PIN, GPIO_FUNC_PWM);
+    
+    uint slice1 = pwm_gpio_to_slice_num(PWM_CON_PIN);
+    pwm_set_wrap(slice1, 255);
+    pwm_set_enabled(slice1, true);
+
+    uint slice2 = pwm_gpio_to_slice_num(PWM_BRI_PIN);
+    pwm_set_wrap(slice2, 255);
+    pwm_set_enabled(slice2, true);
+
+    // default to max contrast
+    pwm_set_gpio_level(PWM_CON_PIN, 0);
+    // default to max brightness (apparently 0% duty is 100% brightness)
+    pwm_set_gpio_level(PWM_BRI_PIN, 0);
 }
 
 int main()
 {
+
     setup();
 
     lcd.initialize();

@@ -67,6 +67,7 @@ target_link_libraries(texteditor
     pico_stdlib 
     tinyusb_host 
     tinyusb_board
+    hardware_pwm
     FatFs_SPI
 )
 
