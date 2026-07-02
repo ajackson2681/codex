@@ -252,6 +252,11 @@ namespace FileSystem
 
     void SetNewFileName(const std::string& name)
     {
+        // add the .txt extension if it doesn't already exist
+        if (!newFileName.ends_with(".txt")) {
+            newFileName += ".txt";
+        }
+
         newFileName = name;
     }
 

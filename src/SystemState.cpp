@@ -1,6 +1,7 @@
 #include "SystemState.hpp"
 #include "Globals.hpp"
 #include "Version.hpp"
+#include "FileSystem.hpp"
 
 namespace SystemState 
 {
@@ -55,7 +56,6 @@ namespace SystemState
             case State::SET_DOC_NAME:
                 // delete the contents of the scratch buffer when we leave this
                 // state, since we might need to reuse the scratch buffer.
-                scratchBuffer.clearBuffer();
                 // cursor _should_ be enabled already, but explicitly do it
                 // jus to be safe.
                 lcd.enableCursor();
@@ -76,7 +76,7 @@ namespace SystemState
                 }
                 else {
                     lcd.clear();
-                    lcd.enableCursor();
+                    lcd.disableCursor();
                 }
                 break;
             case State::STARTUP_NO_CARD_DETECTED:
