@@ -21,6 +21,12 @@ namespace FileSystem
 
     std::string newFileName;
     
+    const std::vector<std::string> validExtensions = {
+        ".txt",
+        ".md",
+        ".adoc"
+    };
+
     bool Init()
     {
         FRESULT fr = f_mount(&fs, "0:", 1);
@@ -48,6 +54,17 @@ namespace FileSystem
     bool Mounted()
     {
         return mounted;
+    }
+
+    bool HasValidExtension(const std::string& fileName)
+    {
+        for (const auto& ext : validExtensions) {
+            if (fileName.ends_with(ext)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void EnumerateFiles()
@@ -81,7 +98,7 @@ namespace FileSystem
                 // do nothing
             } 
             else {
-                if (fileName.ends_with(".txt")) {
+                if (HasValidExtension(fileName)) {
                     fileList.push_back(fileName);
                 }
             }
@@ -252,12 +269,14 @@ namespace FileSystem
 
     void SetNewFileName(const std::string& name)
     {
-        // add the .txt extension if it doesn't already exist
-        if (!newFileName.ends_with(".txt")) {
-            newFileName += ".txt";
+        // add the .txt extension if it doesn't already exist, otherwise use
+        // the written extension
+        if (!HasValidExtension(name)) {
+            newFileName = name + ".txt";
         }
-
-        newFileName = name;
+        else {
+            newFileName = name;
+        }
     }
 
 };
