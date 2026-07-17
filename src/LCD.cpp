@@ -41,7 +41,7 @@ void LCD::initialize(uint8_t en)
     // page 28 of the datasheet specifies the initialization sequence
 
     // spec says to wait for more than 40ms, so we'll just do 45
-    sleep_ms(45);
+    sleep_ms(150);
     
     writeNibble(0x3); // init command, not listed in their command table, but
     // mentioned in the init sequence on page 28

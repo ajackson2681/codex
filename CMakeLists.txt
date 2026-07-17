@@ -29,7 +29,7 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(texteditor VERSION 0.5.2 LANGUAGES C CXX ASM)
+project(texteditor VERSION 0.5.3 LANGUAGES C CXX ASM)
 
 # Generate Version.hpp from template
 configure_file(
