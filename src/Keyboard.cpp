@@ -192,7 +192,10 @@ namespace Keyboard
             case HID_KEY_TAB:
                 writerBuffer.insert("  "); // insert two spaces instead of a tab
                 break;
-                
+            case HID_KEY_CAPS_LOCK:
+            case HID_KEY_ESCAPE:
+                // do nothing, just consume the event
+                break;
             default:
                 HandleAscii(keycode, shift, ctrl, writerBuffer);
         }
@@ -210,7 +213,8 @@ namespace Keyboard
             }
         }
         else if (ascii) {
-            buffer.insert(ascii);
+            // buffer.insert(ascii);
+            lcd.write(ascii);
         }
     }
 

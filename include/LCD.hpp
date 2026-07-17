@@ -144,6 +144,8 @@ private:
     uint8_t d6;
     uint8_t d7;
 
+    uint8_t curEn;
+
     bool cursorEnabled = false;
 
     /**

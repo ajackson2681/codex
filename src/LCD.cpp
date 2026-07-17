@@ -14,6 +14,7 @@ LCD::LCD(uint8_t rs_, uint8_t e1_, uint8_t e2_,
     , d5(d5_)
     , d6(d6_)
     , d7(d7_)
+    , curEn(e1_)
 {
     setOutput(rs);
     setOutput(e1);
@@ -22,18 +23,6 @@ LCD::LCD(uint8_t rs_, uint8_t e1_, uint8_t e2_,
     setOutput(d5);
     setOutput(d6);
     setOutput(d7);
-}
-
-uint8_t LCD::currentEnable() {
-    if (row == 0 || row == 1) {
-        return e1;
-    }
-    else if (row == 2 || row == 3) {
-        return e2;
-    }
-
-    // if row is somehow not in the valid range, just default to first chip 
-    return e1;
 }
 
 void LCD::initialize(uint8_t en)
@@ -112,9 +101,9 @@ void LCD::sendByte(uint8_t value, bool isData, uint8_t en, uint32_t delayUsAfter
 
     gpio_put(rs, prevRs); // restore previous RS state, likely to be low
 
-    if (isData) { // only increment cursor if we're writing data, not if we're sending a command
-        incrementCursor();
-    }
+    // if (isData) { // only increment cursor if we're writing data, not if we're sending a command
+    //     incrementCursor();
+    // }
     
     sleep_us(delayUsAfter);
 }
@@ -134,35 +123,30 @@ void LCD::pulse(uint8_t pin) {
 }
 
 void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
-
-    clampCursorPos(row_, col_);
-
     // if we're switching from rows 0 & 1 to 2 & 3 OR vice versa, we're switching
     // chips and need to disable the cursor on the chip we're leaving
-    bool switchedChips = chipsAreSwitching(row, row_);
+    // bool switchedChips = chipsAreSwitching(row, row_);
     
-    row = row_;
-    col = col_;
-    
-    uint8_t curEnable = currentEnable();
+    // row = row_;
+    // col = col_;
 
-    // set DDRAM address to move cursor to correct position
-    sendByte(Command::SET_DDRAM_ADDRESS(row, col), false, curEnable);
+    // // set DDRAM address to move cursor to correct position
+    // sendByte(Command::SET_DDRAM_ADDRESS(row, col), false, curEn);
     
-    if (switchedChips) {
-        uint8_t otherEnable = (curEnable == e1) ? e2 : e1;
+    // if (switchedChips) {
+    //     uint8_t otherEnable = (curEnable == e1) ? e2 : e1;
         
-        // reset the other display to its 0,0 if we switched chips, otherwise 
-        // weird stuff happens
-        sendByte(Command::SET_DDRAM_ADDRESS(0,0), false, otherEnable);
+    //     // reset the other display to its 0,0 if we switched chips, otherwise 
+    //     // weird stuff happens
+    //     sendByte(Command::SET_DDRAM_ADDRESS(0,0), false, otherEnable);
 
-        // if we're not switching chips, we don't want to mess with the cursor settings
-        // or else we get a weird flickering artifact.
-        if (cursorEnabled) {
-            enableCursor(); // enable the current chip's cursor (also disables the 
-            // other chip's cursor)
-        }
-    }
+    //     // if we're not switching chips, we don't want to mess with the cursor settings
+    //     // or else we get a weird flickering artifact.
+    //     if (cursorEnabled) {
+    //         enableCursor(); // enable the current chip's cursor (also disables the 
+    //         // other chip's cursor)
+    //     }
+    // }
 }
 
 void LCD::setCursorCol(uint8_t col_) {
@@ -188,19 +172,25 @@ uint8_t LCD::getCursorRow() {
 
 void LCD::write(char c)
 {
-    int lRow = row;
-    int lCol = col;
-
     if (c != '\n') {
-        sendByte(c, true, currentEnable());
+        sendByte(c, true, curEn);
     }
     else {
-        if (++lRow >= ROW_COUNT) {
-            lRow = 0;
-        }
-        lCol = 0;
+        // create local copies of the row and column so we don't modify the 
+        // actual cursor position until we call setCursorPos at the end
+        // int lRow = row;
+        // int lCol = col;
+
+        // if (++lRow >= ROW_COUNT) {
+        //     lRow = 0;
+        // }
+        // lCol = 0;
         
-        setCursorPos(lRow,lCol);
+        // if (chipsAreSwitching(row, lRow)) {
+        //     curEn = (curEn == e1) ? e2 : e1;
+        // }
+
+        // setCursorPos(lRow,lCol);
     }
 }
 
@@ -213,9 +203,8 @@ void LCD::write(const std::string& str)
 
 void LCD::enableCursor() {
     cursorEnabled = true;
-    uint8_t curEnable = currentEnable();
-    uint8_t otherEnable = (curEnable == e1) ? e2 : e1;
-    sendByte(Command::CURSOR_ON, false, curEnable);
+    uint8_t otherEnable = (curEn == e1) ? e2 : e1;
+    sendByte(Command::CURSOR_ON, false, curEn);
     sendByte(Command::CURSOR_OFF, false, otherEnable);
 }
 
@@ -228,10 +217,17 @@ void LCD::disableCursor() {
 }
 
 void LCD::incrementCursor() {
+    int curRow = row;
+    
     if (++col >= COL_COUNT) {
         col = 0;
+        
         if (++row >= ROW_COUNT) {
             row = 0;
+        }
+
+        if (chipsAreSwitching(curRow, row)) {
+            curEn = (curEn == e1) ? e2 : e1;
         }
     }
 }
