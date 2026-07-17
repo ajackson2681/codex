@@ -23,6 +23,13 @@
 //     I/D = 1; Increment by 1
 //     S = 0; No shift 
 
+enum CustomChar {
+    RIGHT_ARROW,
+    LEFT_ARROW,
+    UP_ARROW,
+    DOWN_ARROW
+};
+
 class Command 
 {
 public:
@@ -54,6 +61,13 @@ public:
     static uint8_t SET_DDRAM_ADDRESS(uint8_t row, uint8_t col) {
         return SET_DDRAM_ADDR | (ROW_OFFSETS[row] + col);
     }
+
+    // helper function where we just pass in the index of the custom character
+    // we want to write to. Only 8 available slots, so index must be 0-7.
+    static constexpr uint8_t SET_CGRAM_ADDRESS(uint8_t index) {
+        index &= 0x7; // only 3 bits are valid, so mask the rest
+        return SET_CGRAMADDR | (index << 3);
+    }
 private:
     // two controllers each use the same offsets, but this just makes it so we
     // can easily index into the correct one based on the row number
@@ -68,6 +82,7 @@ private:
     // This is not publically accessible, and is instead accessed through the
     // SET_DDRAM_ADDRESS helper function.
     static constexpr uint8_t SET_DDRAM_ADDR  = 0b1000'0000;
+    static constexpr uint8_t SET_CGRAMADDR   = 0b0100'0000;
 };
 
 /**
@@ -129,7 +144,52 @@ public:
     void initialize();
 
 private:
+    struct CustomCharMaps {
+        static constexpr uint8_t RIGHT_ARROW[8] = {
+            0b00000,
+            0b01000,
+            0b01100,
+            0b01110,
+            0b01111,
+            0b01110,
+            0b01100,
+            0b01000
+        };
 
+        static constexpr uint8_t LEFT_ARROW[8] = {
+            0b00000,
+            0b00010,
+            0b00110,
+            0b01110,
+            0b11110,
+            0b01110,
+            0b00110,
+            0b00010
+        };
+
+        static constexpr uint8_t UP_ARROW[8] = {
+            0b00000,
+            0b00000,
+            0b00100,
+            0b00100,
+            0b01110,
+            0b01110,
+            0b11111,
+            0b00000
+        };
+
+        static constexpr uint8_t DOWN_ARROW[8] = {
+            0b00000,
+            0b00000,
+            0b11111,
+            0b01110,
+            0b01110,
+            0b00100,
+            0b00100,
+            0b00000
+        };
+    };
+    
     // local reference to the row and column of the cursor. Used for determining
     // which enable pin we care about
     uint8_t row;
@@ -226,4 +286,6 @@ private:
      * @return false otherwise
      */
     bool chipsAreSwitching(uint8_t curRow_, uint8_t newRow_);
+
+    void registerCustomChars(uint8_t en);
 };

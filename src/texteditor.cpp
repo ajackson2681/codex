@@ -45,7 +45,8 @@ void selectDocument()
 
         FileSystem::ForEachVisibleFile([](const std::string& file, int index) {
             if (index == FileSystem::GetSelectedIndex()) {
-                lcd.write("> ");
+                lcd.write(CustomChar::RIGHT_ARROW);
+                lcd.write(" ");
             } 
             else {
                 lcd.write("  ");

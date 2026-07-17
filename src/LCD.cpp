@@ -67,8 +67,32 @@ void LCD::initialize(uint8_t en)
     // adding a 10ms delay here just to be safe since I was seeing sometimes
     // garbled characters
     sendByte(Command::SET_ENTRY_MODE, false, en, MS_TO_US(10));
+    
+    registerCustomChars(en);
 }
 
+void LCD::registerCustomChars(uint8_t en)
+{
+    sendByte(Command::SET_CGRAM_ADDRESS(CustomChar::RIGHT_ARROW), false, en);
+    for (int i = 0; i < 8; ++i) {
+        sendByte(CustomCharMaps::RIGHT_ARROW[i], true, en);
+    }
+
+    sendByte(Command::SET_CGRAM_ADDRESS(CustomChar::LEFT_ARROW), false, en);
+    for (int i = 0; i < 8; ++i) {
+        sendByte(CustomCharMaps::LEFT_ARROW[i], true, en);
+    }
+
+    sendByte(Command::SET_CGRAM_ADDRESS(CustomChar::UP_ARROW), false, en);
+    for (int i = 0; i < 8; ++i) {
+        sendByte(CustomCharMaps::UP_ARROW[i], true, en);
+    }
+
+    sendByte(Command::SET_CGRAM_ADDRESS(CustomChar::DOWN_ARROW), false, en);
+    for (int i = 0; i < 8; ++i) {
+        sendByte(CustomCharMaps::DOWN_ARROW[i], true, en);
+    }
+}
 
 void LCD::initialize()
 {
