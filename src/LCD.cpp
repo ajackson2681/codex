@@ -152,9 +152,11 @@ void LCD::writeNibble(uint8_t value)
 }
 
 void LCD::pulse(uint8_t pin) {
+    sleep_us(1);
     gpio_put(pin, true);
-    sleep_us(1); // pulse needs to be >450ns, so 1us is safe
+    sleep_us(1); 
     gpio_put(pin, false);
+    sleep_us(1);
 }
 
 void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
@@ -253,10 +255,13 @@ void LCD::disableCursor() {
 
 void LCD::incrementCursor() {
     if (++col >= COL_COUNT) {
-        col = 0;
-        if (++row >= ROW_COUNT) {
-            row = 0;
+        uint8_t newRow = row;
+        
+        if (++newRow >= ROW_COUNT) {
+            newRow = 0;
         }
+
+        setCursorPos(newRow, 0);
     }
 }
 
