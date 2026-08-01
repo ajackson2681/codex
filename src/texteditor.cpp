@@ -25,6 +25,8 @@ void initialize()
 
 void selectDocument()
 {
+    lcd.setCursorPos(0,0);
+    
     // skip to initialization if the file system isn't mounted
     if (!FileSystem::Mounted()) {
         SystemState::set(State::INITIALIZATION);
@@ -93,12 +95,10 @@ void renderScreen()
     if (writerBuffer.isStale()) {
         auto b = writerBuffer.getVisibleFrame();
         
-        lcd.setCursorPos(0,0);
-    
         for (int i = 0; i < ROW_COUNT; i++) {
+            lcd.setCursorPos(i, 0);
             for (int j = 0; j < COL_COUNT; j++) {
                 char c = b[i][j];
-    
                 switch (c) {
                     case '\n':
                     case '\r':
@@ -111,11 +111,17 @@ void renderScreen()
                 }
             }
         }
+
+        int row,col;
+        writerBuffer.getCursorPos(row,col);
+        lcd.setCursorPos(row,col);
+    }
+    else if (writerBuffer.cursorMoved()) {
+        int row,col;
+        writerBuffer.getCursorPos(row,col);
+        lcd.setCursorPos(row,col);
     }
 
-    int row,col;
-    writerBuffer.getCursorPos(row,col);
-    lcd.setCursorPos(row,col);
 }
 
 void setup()

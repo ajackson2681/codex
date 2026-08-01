@@ -24,6 +24,7 @@ private:
     int cursorCol;
     // this is true if the buffer has been modified since the last time it was printed
     bool stale = true;
+    bool cursorHasMoved = true;
     
     /**
      * @brief Resizese the buffer vector. It will double in size with each
@@ -149,6 +150,7 @@ public:
     const char (&getVisibleFrame())[ROW_COUNT][COL_COUNT];
     void invalidate();
     bool isStale();
+    bool cursorMoved();
     int totalChars();
 
     void clearBuffer();

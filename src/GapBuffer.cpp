@@ -139,6 +139,8 @@ void GapBuffer::moveLeft(bool moveCursor)
     if (moveCursor) {
         moveCursorLeft();
     }
+
+    cursorHasMoved = true;
 }
 
 void GapBuffer::moveLeft()
@@ -158,7 +160,6 @@ void GapBuffer::moveCursorRight()
             refreshFrameBuffer();
         }
     }
-
 }
 
 
@@ -176,6 +177,8 @@ void GapBuffer::moveRight(bool moveCursor)
     if (moveCursor) {
         moveCursorRight();
     }
+
+    cursorHasMoved = true;
 }
 
 void GapBuffer::moveRight()
@@ -502,6 +505,13 @@ void GapBuffer::deleteWord()
 bool GapBuffer::isStale()
 {
     return stale;
+}
+
+bool GapBuffer::cursorMoved()
+{
+    bool ret = cursorHasMoved;
+    cursorHasMoved = false;
+    return ret;
 }
 
 const char (&GapBuffer::getVisibleFrame())[ROW_COUNT][COL_COUNT]

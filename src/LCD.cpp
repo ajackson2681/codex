@@ -163,9 +163,6 @@ void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
 
     clampCursorPos(row_, col_);
 
-    // if we're switching from rows 0 & 1 to 2 & 3 OR vice versa, we're switching
-    // chips and need to disable the cursor on the chip we're leaving
-    bool switchedChips = chipsAreSwitching(row, row_);
     
     row = row_;
     col = col_;
@@ -174,20 +171,10 @@ void LCD::setCursorPos(uint8_t row_, uint8_t col_) {
 
     // set DDRAM address to move cursor to correct position
     sendByte(Command::SET_DDRAM_ADDRESS(row, col), false, curEnable);
-    
-    if (switchedChips) {
-        uint8_t otherEnable = (curEnable == e1) ? e2 : e1;
-        
-        // reset the other display to its 0,0 if we switched chips, otherwise 
-        // weird stuff happens
-        sendByte(Command::SET_DDRAM_ADDRESS(0,0), false, otherEnable);
 
-        // if we're not switching chips, we don't want to mess with the cursor settings
-        // or else we get a weird flickering artifact.
-        if (cursorEnabled) {
-            enableCursor(); // enable the current chip's cursor (also disables the 
-            // other chip's cursor)
-        }
+    if (cursorEnabled) {
+        enableCursor(); // enable the current chip's cursor (also disables the 
+        // other chip's cursor)
     }
 }
 
@@ -215,7 +202,6 @@ uint8_t LCD::getCursorRow() {
 void LCD::write(char c)
 {
     int lRow = row;
-    int lCol = col;
 
     if (c != '\n') {
         sendByte(c, true, currentEnable());
@@ -224,9 +210,8 @@ void LCD::write(char c)
         if (++lRow >= ROW_COUNT) {
             lRow = 0;
         }
-        lCol = 0;
         
-        setCursorPos(lRow,lCol);
+        setCursorPos(lRow,0);
     }
 }
 
@@ -253,15 +238,12 @@ void LCD::disableCursor() {
     sendByte(Command::CURSOR_OFF, false, e2);
 }
 
+/**
+ * Only tracks column. Row is set explicitly by the rendering routine
+ */
 void LCD::incrementCursor() {
     if (++col >= COL_COUNT) {
-        uint8_t newRow = row;
-        
-        if (++newRow >= ROW_COUNT) {
-            newRow = 0;
-        }
-
-        setCursorPos(newRow, 0);
+        col = 0;
     }
 }
 
