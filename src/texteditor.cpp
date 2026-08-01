@@ -67,6 +67,7 @@ void setDocumentName()
         lcd.setCursorPos(1,0);
     
         for (int i = 0; i < ROW_COUNT - 1; i++) { // only will have 3 lines available for this
+            lcd.setCursorPos(i+1, 0);
             for (int j = 0; j < COL_COUNT; j++) {
                 char c = b[i][j];
     
